@@ -24,15 +24,16 @@
 // never makes a second one, and a removed one is never brought back (the stamp stays).
 import { NOTE_MAX } from './history.js'
 import { hashId } from './weigh-ins.js'
+import { readRunFields } from './run-fields.js'
 
-export const SPORTS = ['run', 'ride', 'swim', 'hike', 'row', 'ski', 'football', 'racket', 'ball', 'climb', 'fight', 'yoga', 'dance', 'other']
+export const SPORTS = ['run', 'walk', 'ride', 'swim', 'hike', 'row', 'ski', 'football', 'racket', 'ball', 'climb', 'fight', 'yoga', 'dance', 'other']
 export const SPORT_LABEL = {
-  run: 'Run', ride: 'Ride', swim: 'Swim', hike: 'Hike', row: 'Rowing', ski: 'Skiing', football: 'Football',
+  run: 'Run', walk: 'Walk', ride: 'Ride', swim: 'Swim', hike: 'Hike', row: 'Rowing', ski: 'Skiing', football: 'Football',
   racket: 'Racket sports', ball: 'Ball games', climb: 'Climbing', fight: 'Boxing & martial arts', yoga: 'Yoga & pilates',
   dance: 'Dance', other: 'Other sport',
 }
 export const SPORT_ICON = {
-  run: 'figureRun', ride: 'bike', swim: 'swim', hike: 'tree', row: 'arm', ski: 'snowflake', football: 'target',
+  run: 'figureRun', walk: 'steps', ride: 'bike', swim: 'swim', hike: 'tree', row: 'arm', ski: 'snowflake', football: 'target',
   racket: 'bolt', ball: 'trophy', climb: 'pullup', fight: 'boxing', yoga: 'stretch', dance: 'sparkles', other: 'flag',
 }
 // The durations the sheet offers in one tap, in minutes.
@@ -48,6 +49,7 @@ const TITLE_MAX = 80
 // per muscle, like a workout.
 export const SPORT_LOAD = {
   run: { sets: 3, muscles: { calves: 0.8, quadriceps: 0.6, hamstring: 0.5, gluteal: 0.5, 'hip-flexors': 0.3 } },
+  walk: { sets: 0.8, muscles: { calves: 0.5, quadriceps: 0.3, gluteal: 0.3, 'hip-flexors': 0.2 } },
   ride: { sets: 2.5, muscles: { quadriceps: 0.9, gluteal: 0.5, hamstring: 0.3, calves: 0.3 } },
   swim: { sets: 2, muscles: { lats: 0.7, 'front-delts': 0.4, 'side-delts': 0.3, triceps: 0.3, 'upper-back': 0.3 } },
   hike: { sets: 1.5, muscles: { quadriceps: 0.6, gluteal: 0.6, calves: 0.5, hamstring: 0.3 } },
@@ -67,13 +69,18 @@ const isMap = v => !!v && typeof v === 'object' && !Array.isArray(v)
 const ISO = /^\d{4}-\d{2}-\d{2}$/
 const roundKm = v => Math.round(v * 100) / 100
 
-/** One stored entry read back: { d, sport, min, km?, at?, title?, src } or null for a cleared or broken one. */
+/** One stored entry read back: { d, sport, min, km?, at?, title?, src, …run fields } or null for a cleared or broken one. */
 export function readActivity(entry) {
   if (!isMap(entry) || !ISO.test(String(entry.d || ''))) return null
   const sport = SPORTS.includes(entry.sport) ? entry.sport : 'other'
-  const min = Math.round(Number(entry.min))
+  // A run or a walk may come with seconds and parts (lib/run-fields.js); its minutes and distance
+  // then follow from those when the entry did not say them itself.
+  const run = readRunFields(entry, sport)
+  const min = Number.isFinite(Number(entry.min)) && Number(entry.min) >= 1 ? Math.round(Number(entry.min))
+    : run.sec ? Math.max(1, Math.round(run.sec / 60)) : NaN
   if (!Number.isFinite(min) || min < 1) return null
-  const km = Number(entry.km)
+  const segKm = (run.segs || []).reduce((n, g) => n + (g.km || 0), 0)
+  const km = Number(entry.km) > 0 ? Number(entry.km) : segKm
   const at = Number(entry.at)
   const title = typeof entry.title === 'string' ? entry.title.trim().slice(0, TITLE_MAX) : ''
   const note = typeof entry.note === 'string' ? entry.note.trim().slice(0, NOTE_MAX) : ''
@@ -83,6 +90,7 @@ export function readActivity(entry) {
     ...(at > 0 ? { at } : {}),
     ...(title ? { title } : {}),
     ...(note ? { note } : {}),
+    ...run,
     src: SOURCES.includes(entry.src) ? entry.src : 'manual',
   }
 }

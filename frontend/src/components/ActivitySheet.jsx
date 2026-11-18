@@ -9,6 +9,8 @@ import { SPORTS, SPORT_LABEL, SPORT_ICON, SPORT_PRESETS, ACTIVITY_MIN_MAX, activ
 import DateField from './DateField.jsx'
 import Icon from './Icon.jsx'
 import { Button, Stepper } from './ui.jsx'
+import { runSheet } from './RunSheet.jsx'
+import { RUN_SPORTS } from '../lib/run-fields.js'
 
 // Activities (lib/activities.js): a run, a ride, a padel match. Most arrive by themselves from
 // Apple Health or Health Connect, or from an import; this sheet logs one by hand (web, no watch)
@@ -30,7 +32,7 @@ function ActivityLog({ id = null, day = null, close }) {
   const update = useStore(s => s.update)
   const toast = useUI(s => s.toast)
   const had = id ? activitiesOf(S).find(a => a.id === id) : null
-  const [sport, setSport] = useState(had?.sport || 'run')
+  const [sport, setSport] = useState(had?.sport || 'ride')
   const [min, setMin] = useState(had?.min || SPORT_PRESETS[1])
   const [d, setD] = useState(had?.d || day || todayISO())
   const [note, setNote] = useState(had?.note || '')
@@ -55,7 +57,7 @@ function ActivityLog({ id = null, day = null, close }) {
     </div>
     <div className="chips rec-kinds" role="radiogroup" aria-label={t('Sport')} style={{ margin: '0 0 12px', flexWrap: 'wrap' }}>
       {SPORTS.map(k => <button key={k} type="button" role="radio" aria-checked={sport === k}
-        className={'chip nocap ichip' + (sport === k ? ' on' : '')} onClick={() => setSport(k)}>
+        className={'chip nocap ichip' + (sport === k ? ' on' : '')} onClick={() => (!had && RUN_SPORTS.has(k) ? (close(), runSheet({ sport: k, day: d })) : setSport(k))}>
         <Icon name={SPORT_ICON[k]} />{t(SPORT_LABEL[k])}</button>)}
     </div>
     <div className="small muted" style={{ marginBottom: 6 }}>{t('How long')}</div>
@@ -77,8 +79,12 @@ function ActivityLog({ id = null, day = null, close }) {
 }
 
 /** Log a new activity (on `day`, else today), or open the one with `id`. */
-export const activitySheet = ({ id = null, day = null } = {}) =>
-  useUI.getState().openSheet(close => <ActivityLog id={id} day={day} close={close} />)
+// A run or a walk opens the running log's own sheet (components/RunSheet.jsx), with its parts and paces.
+export function activitySheet({ id = null, day = null } = {}) {
+  const a = id ? activitiesOf(useStore.getState().S).find(x => x.id === id) : null
+  if (a && RUN_SPORTS.has(a.sport)) return runSheet({ id })
+  return useUI.getState().openSheet(close => <ActivityLog id={id} day={day} close={close} />)
+}
 
 /** One activity as a list row, the way History lists a workout. */
 export function ActivityRow({ a, showDate = true }) {
