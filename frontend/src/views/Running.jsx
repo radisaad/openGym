@@ -12,6 +12,11 @@ import { runSheet, PAIN_LABEL, TYPE_LABEL, effortWord } from '../components/RunS
 import Icon from '../components/Icon.jsx'
 import CardHead from '../components/CardHead.jsx'
 import { Button, NumberField, TextField, Check } from '../components/ui.jsx'
+import { presetsOf, presetTotals, cuesOf } from '../lib/run-intervals.js'
+import { useRunTimer } from '../store/useRunTimer.js'
+import { nativeCues } from '../lib/run-coach.js'
+import { speak, voiceOpts } from '../lib/speech.js'
+import { intervalSheet, presetName } from '../components/IntervalSheet.jsx'
 import '../running.css'
 
 // Running (v1.4.6): the runs and walks in one place (lib/running.js). This week at a glance, the
@@ -47,6 +52,8 @@ export default function Running() {
       </div>
     </div>
 
+    <IntervalsCard S={S} />
+
     <Watchouts S={S} profile={profile} jump={jump} />
 
     {runs.length > 0 && <div className="card">
@@ -68,6 +75,37 @@ export default function Running() {
     <ShoesCard S={S} />
     <FileCard S={S} />
   </>
+}
+
+/** The interval timer's workouts, one tap to start (views/RunTimer.jsx). */
+function IntervalsCard({ S }) {
+  const nav = useNavigate()
+  const going = useRunTimer(s => s.run)
+  const start = async preset => {
+    useRunTimer.getState().start(preset)
+    // A browser's voice wants its first line said inside the tap; the phone app says it itself.
+    if (!(await nativeCues())) {
+      const first = cuesOf(useRunTimer.getState().run, Date.now(), t, tn)[0]
+      if (first) speak(first.text, { ...voiceOpts(S), onSilent: true })
+    }
+    nav('/running/timer')
+  }
+  return <div className="card rt-presets">
+    <CardHead icon="timer" tint="var(--orange)" title={t('Interval timer')} sub={t('Run and walk on cue, with your phone in your pocket.')}
+      action={<button type="button" className="iconbtn" onClick={() => intervalSheet()} aria-label={t('New intervals')}><Icon name="plus" /></button>} />
+    {going && <Button variant="primary" icon="play" onClick={() => nav('/running/timer')}>{t('Back to your run')}</Button>}
+    {!going && presetsOf(S).map(p => {
+      const tot = presetTotals(p)
+      return <div key={p.id} className="row" style={{ alignItems: 'center', gap: 4 }}>
+        <button type="button" className="item grow" onClick={() => start(p)} aria-label={t('Start {0}', presetName(p))}>
+          <span className="lrow-i act-i" aria-hidden="true" style={{ width: 34, height: 34, borderRadius: 8 }}><Icon name="play" /></span>
+          <span className="grow"><span className="tt">{presetName(p)}</span>
+            <span className="ss">{t('{0} in all, {1} of it running', fmtTime(tot.sec), fmtTime(tot.runSec))}</span></span>
+        </button>
+        <button type="button" className="iconbtn" onClick={() => intervalSheet(p.id)} aria-label={t('Edit intervals')}><Icon name="pencil" /></button>
+      </div>
+    })}
+  </div>
 }
 
 function WeekBars({ weeks }) {

@@ -32,3 +32,34 @@
 .run-pain-v.bad{color:var(--red);font-weight:600}
 button.linkbtn{background:none;border:0;padding:0;color:var(--acc-ink);font:inherit;font-size:14px;cursor:pointer}
 button.linkbtn svg{width:14px;height:14px}
+
+/* Interval timer (views/RunTimer.jsx): one colour per kind of step, readable at arm's length. */
+.rt{--rt:var(--teal);min-height:100dvh;display:flex;flex-direction:column;padding:calc(var(--sat) + 16px) 16px calc(var(--sab) + 24px);background:var(--bg);box-sizing:border-box}
+.rt-run{--rt:var(--orange)}
+.rt-warm,.rt-cool{--rt:var(--blue)}
+.rt-done{--rt:var(--green)}
+.rt-top{display:flex;justify-content:space-between;gap:12px;color:var(--label-2);font-size:15px}
+.rt-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-total{font-variant-numeric:tabular-nums;flex:none}
+.rt-bar{height:6px;border-radius:3px;background:var(--surface-3);margin-top:10px;overflow:hidden}
+.rt-bar>span{display:block;height:100%;background:var(--rt);transition:width .25s linear}
+.rt-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px}
+.rt-kind{font-size:clamp(48px,16vw,96px);font-weight:800;letter-spacing:-.02em;color:var(--rt);text-transform:uppercase;line-height:1}
+.rt-clock{font-size:clamp(72px,26vw,160px);font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.rt-sub{font-size:20px;color:var(--label-2)}
+.rt-next{font-size:17px;color:var(--label-2);margin-top:12px}
+.rt-paused{margin-top:8px;font-weight:600;color:var(--label)}
+.rt-ctl{display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap}
+.rt-ctl>.btn,.rt-ctl>button.btn{flex:1 1 140px}
+.rt-btn{width:64px;height:64px;border-radius:50%;border:0;background:var(--surface-2);color:var(--label);display:grid;place-items:center;cursor:pointer}
+.rt-btn svg{width:26px;height:26px}
+.rt-btn.big{width:88px;height:88px;background:var(--rt);color:#000}
+.rt-btn.big svg{width:36px;height:36px}
+.rt-hint{text-align:center;color:var(--label-2);margin-top:16px}
+.rt-empty{align-items:center;justify-content:center;gap:16px}
+.rt-presets .item{width:100%;text-align:start;background:none;border:0;color:inherit;font:inherit;display:flex;align-items:center;gap:10px}
+.rt-presets .tt,.rt-presets .ss{display:block}
+.rt-step{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;align-items:center;margin-top:6px}
+.rt-block{border:1px solid var(--sep);border-radius:12px;padding:10px;margin-top:10px}
+.chip.run-add{display:inline-flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap}
+.chip.run-add svg{width:14px;height:14px;flex:none}

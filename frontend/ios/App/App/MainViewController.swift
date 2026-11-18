@@ -58,6 +58,8 @@ class MainViewController: CAPBridgeViewController {
         bridge?.registerPluginInstance(AppIconPlugin())
         bridge?.registerPluginInstance(NfcTagsPlugin())
         bridge?.registerPluginInstance(VoiceBridgePlugin())
+        // The interval timer's voice with the screen locked (lib/run-coach.js).
+        bridge?.registerPluginInstance(RunCoachPlugin())
         WidgetPreview.runIfAsked()
         NotificationCenter.default.addObserver(self, selector: #selector(textSizeChanged),
                                                name: UIContentSizeCategory.didChangeNotification, object: nil)

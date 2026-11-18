@@ -31,11 +31,12 @@ export const effortWord = n => (n <= 3 ? t('Easy') : n <= 6 ? t('Moderate') : n 
 const shapeOf = a => (!a ? 'run' : a.sport === 'walk' ? 'walk' : a.segs?.length ? 'mixed' : 'run')
 const segDraft = g => ({ k: g.k, km: g.km ?? null, time: g.sec ? fmtTime(g.sec) : '' })
 
-function RunLog({ id = null, sport = 'run', day = null, close }) {
+function RunLog({ id = null, sport = 'run', day = null, draft: pre = null, close }) {
   const S = useStore(s => s.S)
   const update = useStore(s => s.update)
   const toast = useUI(s => s.toast)
-  const had = id ? activitiesOf(S).find(a => a.id === id) : null
+  // `pre`: a run the interval timer just finished (views/RunTimer.jsx), its parts and times filled in.
+  const had = id ? activitiesOf(S).find(a => a.id === id) : pre
   const profile = readRunProfile(S.runProfile)
   const shoes = activeShoes(S)
   const [shape, setShape] = useState(had ? shapeOf(had) : sport === 'walk' ? 'walk' : 'run')
@@ -50,7 +51,7 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
   // Every area the profile watches is asked each time; others when one is added.
   const [pain, setPain] = useState(() => {
     const p = { ...(had?.pain || {}) }
-    for (const a of profile.watch) if (!(a in p)) p[a] = had ? undefined : 0
+    for (const a of profile.watch) if (!(a in p)) p[a] = id ? undefined : 0
     return p
   })
   const [more, setMore] = useState(!!(had?.cad || had?.elev || had?.hr || had?.steps))
@@ -58,7 +59,7 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
   const [elev, setElev] = useState(had?.elev ?? null)
   const [hr, setHr] = useState(had?.hr ?? null)
   const [steps, setSteps] = useState(had?.steps ?? null)
-  const [shoe, setShoe] = useState(had ? had.shoe || null : defaultShoe(S))
+  const [shoe, setShoe] = useState(id ? had.shoe || null : defaultShoe(S))
   const [note, setNote] = useState(had?.note || '')
   const noteRef = useRef(null)
   const onNoteFocus = useSheetKeyboard(noteRef)
@@ -85,7 +86,7 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
     update(s => { s.activities = withActivity(s.activities, id || 'm' + uid(), entry) })
     close()
     const sore = Object.values(answered).some(v => v >= 4)
-    toast(sore ? t('Saved. Take that pain seriously: rest it, and get it checked if it stays.') : had ? t('Saved') : draft.sport === 'walk' ? t('Walk logged.') : t('Run logged. Nice work.'))
+    toast(sore ? t('Saved. Take that pain seriously: rest it, and get it checked if it stays.') : id ? t('Saved') : draft.sport === 'walk' ? t('Walk logged.') : t('Run logged. Nice work.'))
   }
   const remove = () => {
     update(s => { s.activities = withActivity(s.activities, id, null) })
@@ -95,7 +96,7 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
   const setSeg = (i, patch) => setSegs(list => list.map((g, j) => (j === i ? { ...g, ...patch } : g)))
 
   return <>
-    <h3>{had ? (had.sport === 'walk' ? t('Edit walk') : t('Edit run')) : t('Log a run')}</h3>
+    <h3>{id ? (had.sport === 'walk' ? t('Edit walk') : t('Edit run')) : t('Log a run')}</h3>
     <Segmented value={shape} onChange={setShape} options={[
       { value: 'run', label: t('Run') }, { value: 'mixed', label: t('Run + walk') }, { value: 'walk', label: t('Walk') },
     ]} />
@@ -120,8 +121,8 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
         <button type="button" className="iconbtn" onClick={() => setSegs(list => list.filter((_, j) => j !== i))} aria-label={t('Remove')} disabled={segs.length < 2}><Icon name="xmark" /></button>
       </div>)}
       <div className="row" style={{ gap: 8 }}>
-        <button type="button" className="chip add" onClick={() => setSegs(l => [...l, { k: 'run', km: null, time: '' }])}><Icon name="plus" />{t('Run')}</button>
-        <button type="button" className="chip add" onClick={() => setSegs(l => [...l, { k: 'walk', km: null, time: '' }])}><Icon name="plus" />{t('Walk')}</button>
+        <button type="button" className="chip add nocap run-add" onClick={() => setSegs(l => [...l, { k: 'run', km: null, time: '' }])}><Icon name="plus" />{t('Run')}</button>
+        <button type="button" className="chip add nocap run-add" onClick={() => setSegs(l => [...l, { k: 'walk', km: null, time: '' }])}><Icon name="plus" />{t('Walk')}</button>
       </div>
     </div>}
 
@@ -156,7 +157,7 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
       <span className={'small run-pain-v' + ((pain[area] ?? 0) >= 4 ? ' bad' : '')}>{pain[area] == null ? '–' : `${pain[area]}/10`}</span>
     </div>)}
     <div className="chips" style={{ flexWrap: 'wrap' }}>
-      {PAIN_AREAS.filter(a => !(a in pain)).map(a => <button key={a} type="button" className="chip add nocap" onClick={() => setPain(p => ({ ...p, [a]: 0 }))}>
+      {PAIN_AREAS.filter(a => !(a in pain)).map(a => <button key={a} type="button" className="chip add nocap run-add" onClick={() => setPain(p => ({ ...p, [a]: 0 }))}>
         <Icon name="plus" />{t(PAIN_LABEL[a])}</button>)}
     </div>
 
@@ -181,10 +182,10 @@ function RunLog({ id = null, sport = 'run', day = null, close }) {
       placeholder={t('How was it? (optional)')} onFocus={onNoteFocus} onChange={e => setNote(e.target.value)} />
     <div style={{ height: 16 }} />
     <Button variant="primary" icon="check" onClick={save} disabled={!ok}>{t('Save')}</Button>
-    {had && <><div style={{ height: 8 }} /><Button variant="ghost" icon="trash" onClick={remove}>{t('Remove')}</Button></>}
+    {id && <><div style={{ height: 8 }} /><Button variant="ghost" icon="trash" onClick={remove}>{t('Remove')}</Button></>}
   </>
 }
 
-/** Log a new run (or walk, with `sport`), or open the one with `id`. */
-export const runSheet = ({ id = null, sport = 'run', day = null } = {}) =>
-  useUI.getState().openSheet(close => <RunLog id={id} sport={sport} day={day} close={close} />)
+/** Log a new run (or walk, with `sport`), or open the one with `id`; `draft` fills a new one in. */
+export const runSheet = ({ id = null, sport = 'run', day = null, draft = null } = {}) =>
+  useUI.getState().openSheet(close => <RunLog id={id} sport={sport} day={day} draft={draft} close={close} />)

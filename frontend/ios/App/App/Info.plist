@@ -128,6 +128,9 @@
 		<string>fetch</string>
 		<string>processing</string>
 		<string>bluetooth-central</string>
+		<!-- audio: the interval timer's voice with the screen locked (RunCoachPlugin.swift). Held
+		     only while an interval run is going, and let go when it ends. -->
+		<string>audio</string>
 	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>

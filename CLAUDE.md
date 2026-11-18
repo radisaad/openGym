@@ -3,6 +3,19 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 For people, the same map with diagrams is [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+## Owner preferences (this fork)
+
+This fork is a personal, running-first build for its owner. These override the upstream habits below:
+
+- **Languages: English and French only.** New user-facing strings get an English key and a French
+  translation, nothing else, unless the owner explicitly asks for another language. Do not spend
+  work on the other locale packs, native `.lproj`/`values-*` strings or catalogue languages.
+- **Ask before large work the owner may not use** (other languages, other platforms such as
+  Android/Wear OS/Garmin/Zepp, upstream-only features). Propose skipping it and let the owner decide.
+- The owner runs on an **iPhone** and installs builds with Xcode on a Mac; the server will run on a
+  Windows 11 Pro laptop (WSL2 + Docker). Personal training data never goes into this repository
+  (it is public); it travels as an import file instead (`lib/run-import.js`).
+
 ## What this is
 
 openGym is a self-hosted gym and body-weight tracker. Two containers (`api` + `web`) plus a

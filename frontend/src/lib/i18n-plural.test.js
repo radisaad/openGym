@@ -90,6 +90,8 @@ describe('tn() — plural forms from the pack', () => {
     expect(keys.length).toBeGreaterThan(20)
     for (const [lang, pack] of [['ru', ru], ['uk', uk], ['pl', pl]]) {
       for (const k of keys) {
+        // English and French only from 1.4.6 on (CLAUDE.md): a key no pack but French has falls back to English here.
+        if (!Object.hasOwn(pack, k)) continue
         expect(typeof pack[k], `${lang}: ${k}`).toBe('object')
         expect(Object.keys(pack[k]), `${lang}: ${k}`).toEqual(expect.arrayContaining(['one', 'few', 'many']))
       }

@@ -50,7 +50,10 @@ for (const file of files) {
 // which is the usual shape of the bug and worth naming separately from plain gaps.
 const seen = new Map()
 for (const dict of locales.values()) for (const k of Object.keys(dict)) if (!italianOnlyKeys.includes(k)) seen.set(k, (seen.get(k) || 0) + 1)
-const union = [...seen.keys()]
+// This fork speaks English and French only (CLAUDE.md, owner preferences): a key that only the
+// French pack has is a new string on purpose, and every other language falls back to English.
+const frOnly = new Set([...seen.keys()].filter(k => seen.get(k) === 1 && locales.has('fr') && Object.hasOwn(locales.get('fr'), k)))
+const union = [...seen.keys()].filter(k => !frOnly.has(k))
 
 // t('…{0}…', x) substitutes by index, so a translation that loses a {0} drops the number out of
 // the sentence and one that invents a {1} prints the braces at the reader. The KEY is the English
