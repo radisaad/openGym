@@ -2,6 +2,7 @@
 // the same crop of each photo (lib/photo-compare.js coverCrop, from where it was dragged to),
 // the date on each, or the before/after slider at the place it was left. It is drawn here, on
 // the device, and handed to the share sheet (lib/share-image.js); nothing is uploaded.
+import { APP_NAME } from './brand.js'
 import { coverCrop } from './photo-compare.js'
 import { makeCanvas, toPng } from './share-image.js'
 
@@ -104,7 +105,7 @@ export async function renderCompare({ items, rows, aspect, mode = 'side', pct = 
   ctx.font = `600 30px ${FAMILY}`
   ctx.textBaseline = 'middle'
   ctx.textAlign = 'left'
-  ctx.fillText('openGym', PAD, L.foot)
+  ctx.fillText(APP_NAME, PAD, L.foot)
   if (caption) {
     ctx.fillStyle = 'rgba(255,255,255,0.6)'
     ctx.font = `500 26px ${FAMILY}`

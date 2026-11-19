@@ -12,11 +12,9 @@ import { runSheet, PAIN_LABEL, TYPE_LABEL, effortWord } from '../components/RunS
 import Icon from '../components/Icon.jsx'
 import CardHead from '../components/CardHead.jsx'
 import { Button, NumberField, TextField, Check } from '../components/ui.jsx'
-import { presetsOf, presetTotals, cuesOf } from '../lib/run-intervals.js'
+import { presetsOf, presetTotals } from '../lib/run-intervals.js'
 import { useRunTimer } from '../store/useRunTimer.js'
-import { nativeCues } from '../lib/run-coach.js'
-import { speak, voiceOpts } from '../lib/speech.js'
-import { intervalSheet, presetName } from '../components/IntervalSheet.jsx'
+import { intervalSheet, presetName, startInterval } from '../components/IntervalSheet.jsx'
 import '../running.css'
 
 // Running (v1.4.6): the runs and walks in one place (lib/running.js). This week at a glance, the
@@ -81,15 +79,7 @@ export default function Running() {
 function IntervalsCard({ S }) {
   const nav = useNavigate()
   const going = useRunTimer(s => s.run)
-  const start = async preset => {
-    useRunTimer.getState().start(preset)
-    // A browser's voice wants its first line said inside the tap; the phone app says it itself.
-    if (!(await nativeCues())) {
-      const first = cuesOf(useRunTimer.getState().run, Date.now(), t, tn)[0]
-      if (first) speak(first.text, { ...voiceOpts(S), onSilent: true })
-    }
-    nav('/running/timer')
-  }
+  const start = preset => startInterval(preset, S)
   return <div className="card rt-presets">
     <CardHead icon="timer" tint="var(--orange)" title={t('Interval timer')} sub={t('Run and walk on cue, with your phone in your pocket.')}
       action={<button type="button" className="iconbtn" onClick={() => intervalSheet()} aria-label={t('New intervals')}><Icon name="plus" /></button>} />

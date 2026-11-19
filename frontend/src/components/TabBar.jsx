@@ -9,6 +9,8 @@ import Icon from './Icon.jsx'
 import Elapsed from './Elapsed.jsx'
 import { useConnectionTrouble } from './SyncBanner.jsx'
 import { retapTab } from '../lib/scroll-top.js'
+import { useRunTimer } from '../store/useRunTimer.js'
+import { startRunSheet } from './StartRunSheet.jsx'
 
 // Module scope, not TabBar's render body. Declared inside it, `Tab` was a new function on every
 // render, so React saw a different component type each time and threw the button away and built a
@@ -35,10 +37,14 @@ export default function TabBar({ onStart, onPick }) {
   // With the connection banner switched off, a sync problem shows as a dot on Home, the tab
   // Settings lives under (#369, #330).
   const trouble = useConnectionTrouble()
+  // Before the early return below: a hook must run on every render.
+  const run = useRunTimer(st => st.run)
   if (!user && !isGuest) return null
   const cur = loc.pathname.split('/')[1] || 'home'
   // A screen without a tab of its own lights the tab it is opened from (Muscles from both).
-  const PARENT = { history: 'stats', 'structural-balance': 'stats', tools: 'stats', 'progress-photos': 'stats', measurements: 'stats', settings: 'home', checkin: 'home', running: 'home', muscles: 'library', trainer: 'home' }
+  // RadiGym is running-first: Running has a tab of its own, and the gym (the plan, the exercises,
+  // the muscles) lives under the Gym tab.
+  const PARENT = { history: 'stats', 'structural-balance': 'stats', tools: 'stats', 'progress-photos': 'stats', measurements: 'stats', settings: 'home', checkin: 'home', library: 'plan', muscles: 'plan', trainer: 'home' }
   const parent = cur === 'muscles' && loc.state?.from === '/stats' ? 'stats' : PARENT[cur]
   const on = k => cur === k || parent === k
 
@@ -50,9 +56,15 @@ export default function TabBar({ onStart, onPick }) {
   }
 
   const running = !!S.active && cur !== 'workout' && !S.active.editingWorkoutId && !S.active.backfill && S.active.start > 0
-  const startWorkout = () => {
-    // The press was held: the picker is open already, and this click is its release.
+  // The big button: a gym workout in progress comes first (Resume), then an interval run going,
+  // else the start sheet (components/StartRunSheet.jsx): intervals, a run or walk to log, the gym.
+  const tapStart = () => {
     if (hold.current === 'fired') { hold.current = null; return }
+    if (S.active) { nav('/workout'); return }
+    if (run) { nav('/running/timer'); return }
+    startRunSheet(startWorkout)
+  }
+  const startWorkout = () => {
     if (!S.active) {
       // Settings → Workout → Start button (#930): every tap asks which workout.
       if (S.startPick === 'ask' && onPick) { onPick(); return }
@@ -82,7 +94,7 @@ export default function TabBar({ onStart, onPick }) {
   return (
     <nav id="tabbar">
       <Tab active={on('home')} icon="house" label={t('Home')} dot={trouble} onClick={() => switchTab('/home')} tour="tab-home" />
-      <Tab active={on('plan')} icon="calendar" label={t('Plan')} onClick={() => switchTab('/plan')} tour="tab-plan" />
+      <Tab active={on('running')} icon="figureRun" label={t('Running')} onClick={() => switchTab('/running')} tour="tab-running" />
       {/* On the workout screen itself there is nothing to resume, so the button reads as the
           tab it is and stays lit (#29); anywhere else it brings you back to the exercise you
           were on — the marker is kept in S.active.cur and never moves on its own (#21). The
@@ -90,16 +102,16 @@ export default function TabBar({ onStart, onPick }) {
           A live session you stepped away from shows its running time instead of a word, the
           button still named Resume; a past workout being edited or logged after the fact has no
           clock to run. */}
-      <button data-tour="start" className={'start' + (S.active ? ' rec' : '') + (S.active && cur === 'workout' ? ' on' : '')} onClick={startWorkout}
+      <button data-tour="start" className={'start' + (S.active || run ? ' rec' : '') + (S.active && cur === 'workout' ? ' on' : '')} onClick={tapStart}
         onPointerDown={holdStart} onPointerUp={holdEnd} onPointerLeave={holdEnd} onPointerCancel={holdEnd}
         onContextMenu={e => { if (!S.active && onPick) e.preventDefault() }}
         aria-label={running ? t('Resume') : undefined}>
         <span className="cir"><Icon name="play" /></span>
         {running ? <span className="tab-time"><Elapsed start={S.active.start} pausedAt={S.active.pausedAt} /></span>
-          : <span>{S.active ? (cur === 'workout' ? t('Workout') : S.active.editingWorkoutId ? t('Edit workout') : t('Resume')) : t('Start')}</span>}
+          : <span>{S.active ? (cur === 'workout' ? t('Workout') : S.active.editingWorkoutId ? t('Edit workout') : t('Resume')) : run ? t('Resume') : t('Start')}</span>}
       </button>
+      <Tab active={on('plan')} icon="dumbbell" label={t('Gym')} onClick={() => switchTab('/plan')} tour="tab-plan" />
       <Tab active={on('stats')} icon="chart" label={t('Stats')} onClick={() => switchTab('/stats')} tour="tab-stats" />
-      <Tab active={on('library')} icon="dumbbell" label={t('Exercises')} onClick={() => switchTab('/library')} tour="tab-library" />
     </nav>
   )
 }

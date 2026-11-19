@@ -4,6 +4,7 @@
 // lib/share-image.js gets the picture out of the app. No exercise picture or clip is ever drawn
 // on a card (the licence keeps those inside the app, NOTICE.md).
 
+import { APP_NAME } from './brand.js'
 import { inkIn } from './accent.js'
 
 // 9:16 for Stories and Reels, 1:1 for a feed or a chat.
@@ -122,7 +123,7 @@ export function drawBrand(ctx, { x, y, width, colors, family, size = 40, badge: 
   ctx.textAlign = 'left'
   ctx.font = `700 ${size}px ${family}`
   if ('letterSpacing' in ctx) ctx.letterSpacing = `${(-size * 0.036).toFixed(2)}px`
-  const textW = ctx.measureText('openGym').width
+  const textW = ctx.measureText(APP_NAME).width
   const lockW = markH * MARK_ASPECT + gap + textW
   let lx = x
   if (badge) {
@@ -135,8 +136,8 @@ export function drawBrand(ctx, { x, y, width, colors, family, size = 40, badge: 
   drawMark(ctx, lx, y - size * 0.36, markH, BRAND.green)
   let tx = lx + markH * MARK_ASPECT + gap
   ctx.fillStyle = onDark ? BRAND.light : BRAND.dark
-  ctx.fillText('open', tx, y)
-  tx += ctx.measureText('open').width
+  ctx.fillText(APP_NAME.slice(0, -3), tx, y)
+  tx += ctx.measureText(APP_NAME.slice(0, -3)).width
   ctx.fillStyle = BRAND.green
   ctx.fillText('Gym', tx, y)
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px'

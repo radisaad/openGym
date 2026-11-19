@@ -1,3 +1,4 @@
+import { APP_NAME } from '../lib/brand.js'
 import { showsDashboard } from '../lib/trainer-api.js'
 import { recordHintsOn } from '../lib/set-records.js'
 import { setRecoveryHint } from '../lib/recovery-hint.js'
@@ -1091,7 +1092,7 @@ export default function Settings({ page = null, find = null, via = null, entryKe
             emoji for those who like them (components/Glyph.jsx). Synced like the theme. */}
         <Row icon="sparkles" iconTint="var(--orange)" title={t('Icons')} subtitle={t('The flame, the medals and friends.')}>
           <Segmented className="seg-inline"
-            options={[{ value: 'opengym', label: 'openGym' }, { value: 'emoji', label: t('Emoji') }]}
+            options={[{ value: 'opengym', label: APP_NAME }, { value: 'emoji', label: t('Emoji') }]}
             value={S.icons === 'emoji' ? 'emoji' : 'opengym'}
             onChange={v => update(s => { if (v === 'emoji') s.icons = 'emoji'; else delete s.icons })} />
         </Row>

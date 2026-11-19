@@ -121,7 +121,7 @@ export default function Login() {
   if (ssoOnly) return (
     <div className="narrow" style={wrap}>
       {head}
-      <div className="muted" style={{ marginBottom: 34 }}>{t('Your workouts. Your weights. Your profile.')}</div>
+      <div className="muted" style={{ marginBottom: 34 }}>{t('Your runs. Your training. Your data.')}</div>
       {ssoNote}
       {ssoButton}
       {canGuest && <Button variant="ghost" className="dim" onClick={() => setGuest(true)}>{t('Continue without account')}</Button>}
@@ -136,7 +136,7 @@ export default function Login() {
   return (
     <div className="narrow" style={wrap}>
       {head}
-      <div className="muted" style={{ marginBottom: 34 }}>{t('Your workouts. Your weights. Your profile.')}</div>
+      <div className="muted" style={{ marginBottom: 34 }}>{t('Your runs. Your training. Your data.')}</div>
       {ssoNote}
       {ssoButton}
       {webauthnOK() ? <>

@@ -5,6 +5,7 @@
 // here, painted onto the card and never leaves the device on its own. The exported PNG is a new
 // picture, so no EXIF or GPS goes with it. Exercise stills and animations are never offered as a
 // photo (licence, NOTICE.md). Layout and drawing live in lib/share-card.js.
+import { APP_NAME } from '../lib/brand.js'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
@@ -270,7 +271,7 @@ export default function ShareWorkout({ w, close }) {
     setBusy(true)
     const blob = await toPng(canvasRef.current)
     if (!blob) { toast(t('Could not create the image')); setBusy(false); return }
-    const done = await how(blob, `opengym-workout-${day}${pref.template === 'sticker' ? '-sticker' : ''}.png`, w.name || 'openGym', toast)
+    const done = await how(blob, `opengym-workout-${day}${pref.template === 'sticker' ? '-sticker' : ''}.png`, w.name || APP_NAME, toast)
     setBusy(false)
     if (done !== false) close?.()
   }

@@ -1,3 +1,4 @@
+import { APP_NAME } from '../lib/brand.js'
 import Icon from './Icon.jsx'
 import { BrandMark } from './BrandLogo.jsx'
 import { t } from '../lib/i18n.js'
@@ -197,7 +198,7 @@ export function GlanceNotification ({ view, live, now = Date.now(), stillSrc }) 
   const acts = resting ? [t('Pause'), '+ 15s', t('Skip')] : view.buttons.map(k => (k === 'restAdd' ? '+15 s' : k === 'pause' && view.paused ? st.tl?.['a.resume'] : k === 'effort' && st.cur?.tv?.effort ? st.cur.tv.effort : btnLabel(k, st.tl, live.attributes.labels)))
   return <div className="gl-android" aria-hidden="true">
     <div className="gl-and-head">
-      <Icon name="dumbbell" /><span>openGym</span>
+      <Icon name="dumbbell" /><span>{APP_NAME}</span>
       {view.clock && <span className="gl-and-clock">{clockValue(view.clock, now)}</span>}
     </div>
     <div className="gl-and-body">

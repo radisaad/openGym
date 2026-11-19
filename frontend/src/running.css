@@ -63,3 +63,8 @@ button.linkbtn svg{width:14px;height:14px}
 .rt-block{border:1px solid var(--sep);border-radius:12px;padding:10px;margin-top:10px}
 .chip.run-add{display:inline-flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap}
 .chip.run-add svg{width:14px;height:14px;flex:none}
+.run-home-last{margin-top:8px}
+.run-home-go{margin-top:12px;position:relative;z-index:1}
+.start-run-row{width:100%;text-align:start;background:none;border:0;color:inherit;font:inherit;display:flex;align-items:center;gap:12px}
+.start-run-row .tt,.start-run-row .ss{display:block}
+.start-run-row .lrow-i{color:#fff}

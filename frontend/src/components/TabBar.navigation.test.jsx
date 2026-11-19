@@ -5,6 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import TabBar from './TabBar.jsx'
 import { DEF, useStore } from '../store/useStore.js'
+import { useUI } from '../store/useUI.js'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
@@ -37,9 +38,9 @@ const go = async to => { await act(async () => router.navigate(to)) }
 describe('root tab history', () => {
   it('does not accumulate a back stack when switching tabs repeatedly', async () => {
     for (let i = 0; i < 3; i++) {
-      for (const label of ['Plan', 'Stats', 'Exercises', 'Home']) await tap(label)
+      for (const label of ['Gym', 'Stats', 'Running', 'Home']) await tap(label)
     }
-    await tap('Plan')
+    await tap('Gym')
     expect(router.state.location.pathname).toBe('/plan')
     await go(-1)
     expect(router.state.location.pathname).toBe('/plan')
@@ -56,7 +57,7 @@ describe('root tab history', () => {
   })
 
   it('still pushes a detail page and returns to the tab it opened from', async () => {
-    await tap('Plan')
+    await tap('Gym')
     await go('/plan/r/one')
     await go(-1)
     expect(router.state.location.pathname).toBe('/plan')
@@ -67,17 +68,22 @@ describe('root tab history', () => {
 
   it('opens a different tab root from a nested page of the active tab', async () => {
     await go('/plan/r/one')
-    await tap('Plan')
+    await tap('Gym')
     expect(router.state.location.pathname).toBe('/plan')
     expect(router.state.historyAction).toBe('REPLACE')
   })
 
-  it('preserves the workout chooser return path', async () => {
+  it('opens the start sheet from the big button, not a page', async () => {
     useStore.setState({ S: { ...useStore.getState().S, routines: [] } })
     await tap('Start')
-    expect(router.state.location.pathname).toBe('/workout')
-    await go(-1)
     expect(router.state.location.pathname).toBe('/home')
+    expect(useUI.getState().sheets).toHaveLength(1)
     expect(onStart).not.toHaveBeenCalled()
+    act(() => useUI.getState().closeAll())
+  })
+
+  it('opens Running from its own tab', async () => {
+    await tap('Running')
+    expect(router.state.location.pathname).toBe('/running')
   })
 })

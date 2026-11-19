@@ -6007,4 +6007,7 @@ export default {
   "{0} minutes {1}": "{0} minutes {1}",
   "{0} step": "{0} étape",
   "{0} steps": "{0} étapes",
+  "Start a gym workout": "Commencer une séance de muscu",
+  "Last: {0}": "Dernière : {0}",
+  "Your runs. Your training. Your data.": "Tes courses. Ton entraînement. Tes données.",
 }

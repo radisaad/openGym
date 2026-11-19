@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 // The tab you are on, tapped again: to the top of its page (lib/scroll-top.js), and from the top of
-// Exercises into its search field. A tap on another tab still just switches.
+// Exercises into its search field (the library is under the Gym tab in RadiGym, so that part no
+// longer comes from a tab). A tap on another tab still just switches.
 import React, { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
@@ -44,8 +45,8 @@ afterEach(() => {
 })
 
 describe('tapping the tab you are on', () => {
-  it.each(['Home', 'Plan', 'Stats', 'Exercises'])('%s scrolls its page to the top, smoothly', async label => {
-    const path = { Home: '/home', Plan: '/plan', Stats: '/stats', Exercises: '/library' }[label]
+  it.each(['Home', 'Gym', 'Stats', 'Running'])('%s scrolls its page to the top, smoothly', async label => {
+    const path = { Home: '/home', Gym: '/plan', Stats: '/stats', Running: '/running' }[label]
     await act(async () => router.navigate(path))
     const key = router.state.location.key
     at(3000)
@@ -56,28 +57,24 @@ describe('tapping the tab you are on', () => {
 
   it('jumps with Reduce Motion on', async () => {
     reduce = true
+    await act(async () => router.navigate('/running'))
     at(3000)
-    await tap('Exercises')
+    await tap('Running')
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, left: 0, behavior: 'auto' })
-  })
-
-  it('at the top of Exercises already, goes to the search field', async () => {
-    await tap('Exercises')
-    expect(window.scrollTo).not.toHaveBeenCalled()
-    expect(document.activeElement).toBe(page.querySelector('.search input'))
   })
 
   it('at the top of another tab does nothing', async () => {
     await act(async () => router.navigate('/plan'))
-    await tap('Plan')
+    await tap('Gym')
     expect(window.scrollTo).not.toHaveBeenCalled()
     expect(document.activeElement).not.toBe(page.querySelector('.search input'))
   })
 
   it('leaves the page alone under an open sheet', async () => {
+    await act(async () => router.navigate('/running'))
     at(3000)
     document.body.style.position = 'fixed'
-    await tap('Exercises')
+    await tap('Running')
     expect(window.scrollTo).not.toHaveBeenCalled()
   })
 })

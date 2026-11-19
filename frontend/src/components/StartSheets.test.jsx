@@ -51,22 +51,40 @@ describe('the start picker (#930)', () => {
     expect(started).toEqual([['mob']])
     expect(useUI.getState().sheets).toHaveLength(0)
   })
-  it('the Start tab: a tap starts today, a long press opens the picker, "Let me pick" asks every time', () => {
+  it('the Start tab: a tap opens the start sheet, whose gym row starts today; a long press opens the picker', () => {
     vi.useFakeTimers()
+    // RadiGym is running-first: the big button opens the start sheet (intervals, a run or walk to
+    // log, the gym), and the gym row there does what the button used to do.
+    const pickGym = () => {
+      const sheet = useUI.getState().sheets.at(-1)
+      const box = document.createElement('div')
+      document.body.appendChild(box)
+      const r = createRoot(box)
+      act(() => r.render(sheet.render(() => useUI.getState().closeSheet(sheet.id))))
+      const row = [...box.querySelectorAll('button')].find(b => b.textContent.includes('Start a gym workout'))
+      act(() => row.click())
+      act(() => r.unmount())
+      box.remove()
+    }
     try {
       const onStart = vi.fn(), onPick = vi.fn()
       const btn = () => host.querySelector('[data-tour="start"]')
       act(() => root.render(<TabBar onStart={onStart} onPick={onPick} />))
       act(() => btn().click())
+      expect(onStart).not.toHaveBeenCalled()
+      expect(useUI.getState().sheets).toHaveLength(1)
+      pickGym()
       expect(onStart).toHaveBeenCalledWith(['push'])
+      expect(useUI.getState().sheets).toHaveLength(0)
       act(() => btn().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })))
       act(() => vi.advanceTimersByTime(START_HOLD_MS + 10))
       expect(onPick).toHaveBeenCalledTimes(1)
       act(() => btn().dispatchEvent(new PointerEvent('pointerup', { bubbles: true })))
-      act(() => btn().click())   // the release of the hold starts nothing
-      expect(onStart).toHaveBeenCalledTimes(1)
+      act(() => btn().click())   // the release of the hold opens nothing
+      expect(useUI.getState().sheets).toHaveLength(0)
       act(() => useStore.getState().update(s => { s.startPick = 'ask' }))
       act(() => btn().click())
+      pickGym()
       expect(onPick).toHaveBeenCalledTimes(2)
       expect(onStart).toHaveBeenCalledTimes(1)
     } finally { vi.useRealTimers() }

@@ -23,6 +23,7 @@
 //
 // Nothing here bundles a PDF library: the browser's print dialog or the phone's print sheet
 // renders the PDF.
+import { APP_NAME } from './brand.js'
 import { t, getLang, RTL_LANGS, dateLocale } from './i18n-core.js'
 import { MOBILE, printHtml } from './mobile.js'
 
@@ -214,7 +215,7 @@ function printInFrame(html) {
  * suggested PDF file; Android refuses a job without one.
  */
 export function printDocument(html, name) {
-  if (MOBILE) return printHtml(html, name || 'openGym', printOptions()).catch(err => {
+  if (MOBILE) return printHtml(html, name || APP_NAME, printOptions()).catch(err => {
     // A dismissed sheet stays quiet. A phone with no print service at all (#991) says so: the
     // store comes in through a dynamic import, since plain Node tests load this file too.
     if (err?.code !== 'no-service') return

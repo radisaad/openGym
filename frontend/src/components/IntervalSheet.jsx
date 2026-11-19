@@ -3,7 +3,11 @@ import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { t, tn } from '../lib/i18n.js'
 import { uid } from '../lib/format.js'
-import { readPreset, presetTotals, presetsOf, TIMES_MAX, BUILT_IN } from '../lib/run-intervals.js'
+import { readPreset, presetTotals, presetsOf, TIMES_MAX, BUILT_IN, cuesOf } from '../lib/run-intervals.js'
+import { useRunTimer } from '../store/useRunTimer.js'
+import { MOBILE } from '../lib/mobile.js'
+import { speak, voiceOpts } from '../lib/speech.js'
+import { nav } from '../lib/nav.js'
 import { fmtTime, parseTime } from '../lib/running.js'
 import Icon from './Icon.jsx'
 import { Button, Stepper, TextField } from './ui.jsx'
@@ -89,3 +93,16 @@ function IntervalEdit({ id, close }) {
 
 /** New intervals, or the preset `id` to change (a built-in one as a copy). */
 export const intervalSheet = (id = null) => useUI.getState().openSheet(close => <IntervalEdit id={id} close={close} />)
+
+/**
+ * Starts an interval run of `preset` and opens the timer. In a browser the first line is said right
+ * here, inside the tap (Safari only lets a page speak from one); the phone app says it itself.
+ */
+export function startInterval(preset, S) {
+  useRunTimer.getState().start(preset)
+  if (!MOBILE) {
+    const first = cuesOf(useRunTimer.getState().run, Date.now(), t, tn)[0]
+    if (first) speak(first.text, { ...voiceOpts(S), onSilent: true })
+  }
+  nav('/running/timer')
+}
