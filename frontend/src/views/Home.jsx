@@ -38,7 +38,6 @@ import { FastingLine } from '../components/SisterApps.jsx'
 import { ChallengesCard } from '../components/Challenges.jsx'
 import { isOn } from '../lib/modules.js'
 import { APP_NAME } from '../lib/brand.js'
-import RunningHomeCard from '../components/RunningHomeCard.jsx'
 
 // Home = what to do now + a quick glance. Deep charts & history live in Stats.
 export default function Home() {
@@ -143,9 +142,6 @@ export default function Home() {
       <button className="iconbtn" data-tour="settings-gear" onClick={() => nav('/settings')} aria-label={trouble ? t('Settings') + ', ' + t('Connection problem') : t('Settings')}><Icon name="gear" />{trouble && <span className="tab-dot" aria-hidden="true" />}</button>
     </div>
     <TrainerNotice />
-
-    {/* Running first (v1.4.6): this week's runs and walks, one tap into Running. */}
-    <RunningHomeCard S={S} />
 
     <div className="card">
       {/* A running programme (lib/programmes.js) wrote this week's plan: where it stands, one tap from its screen. */}

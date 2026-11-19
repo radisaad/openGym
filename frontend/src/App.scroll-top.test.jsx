@@ -85,11 +85,11 @@ describe('on a long page', () => {
   })
 
   it('the tab you are on, tapped again, glides to the top too', async () => {
-    await start('#/stats')
-    await appear('#app .hdr button[aria-label="History"]')
+    await start('#/progress')
+    await appear('#app .ra-title')
     await scrolledTo(1500)
-    await tap([...document.querySelectorAll('#tabbar button')].find(b => b.textContent === 'Stats'))
-    expect(window.location.hash).toBe('#/stats')
+    await tap([...document.querySelectorAll('#tabbar button')].find(b => b.textContent === 'Progress'))
+    expect(window.location.hash).toBe('#/progress')
     expect(scrolls.at(-1)).toEqual({ top: 0, left: 0, behavior: 'smooth' })
   })
 

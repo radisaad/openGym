@@ -94,7 +94,7 @@ const list = v => (Array.isArray(v) ? v : [])
 // gymNotes a note pinned at one gym, journalFolders a saved journal filter (lib/journal.js),
 // activities a run or a football match (lib/activities.js), one entry per session; shoes a pair
 // of running shoes (lib/shoes.js), one entry per pair.
-export const STAMPED_MAPS = ['balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'stackWeights', 'exUnit', 'dayNotes', 'dayPhotos', 'exMerged', 'exGym', 'sessionTargets', 'exMedia', 'recoverySessions', 'gymNotes', 'journalFolders', 'dayForm', 'activities', 'shoes']
+export const STAMPED_MAPS = ['balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'stackWeights', 'exUnit', 'dayNotes', 'dayPhotos', 'exMerged', 'exGym', 'sessionTargets', 'exMedia', 'recoverySessions', 'gymNotes', 'journalFolders', 'dayForm', 'activities', 'shoes', 'runPain']
 
 /** The copy with the later `_ts`; on a tie the first argument (callers pass local first). */
 export const newerOf = (a, b) => ((b?._ts || 0) > (a?._ts || 0) ? b : a)
@@ -720,7 +720,7 @@ function applyDeletions(S, deleted) {
 const OWN_MERGE = new Set([
   '_ts', '_rev', '_wid', '_wids', '_unstamped', '_prior', 'active', 'unit', 'unitSet', 'resetAt', 'resetIds', 'deleted', 'edited', 'undone', 'routineOrder',
   'workouts', 'routines', 'customEx', 'equipProfiles', 'gymCards', 'bodyweight', 'measurements', 'favEx',
-  'exWeights', 'balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'stackWeights', 'exUnit', 'dayNotes', 'dayPhotos', 'exMerged', 'exGym', 'sessionTargets', 'exMedia', 'recoverySessions', 'gymNotes', 'journalFolders', 'dayForm', 'activities', 'shoes',
+  'exWeights', 'balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'stackWeights', 'exUnit', 'dayNotes', 'dayPhotos', 'exMerged', 'exGym', 'sessionTargets', 'exMedia', 'recoverySessions', 'gymNotes', 'journalFolders', 'dayForm', 'activities', 'shoes', 'runPain',
 ])
 // Stamped per key instead of whole: one day of the plan, one exercise's note or bar, one programme
 // (lib/programmes.js; the running one, `programme`, is a plain setting).

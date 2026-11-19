@@ -77,7 +77,7 @@ function RunLog({ id = null, sport = 'run', day = null, draft: pre = null, close
     if (!ok) return
     const answered = Object.fromEntries(Object.entries(pain).filter(([, v]) => v != null))
     const entry = {
-      ...(had?.at ? { at: had.at } : {}), ...(had?.title ? { title: had.title } : {}),
+      ...(had?.at ? { at: had.at } : {}), ...(had?.title ? { title: had.title } : {}), ...(had?.preset ? { preset: had.preset } : {}),
       d, ...draft, type: shape === 'mixed' ? type || 'runwalk' : shape === 'run' ? type || undefined : undefined,
       rpe: rpe || undefined, pain: answered,
       ...(more ? { cad, elev, hr, steps } : {}),

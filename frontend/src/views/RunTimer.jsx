@@ -62,7 +62,7 @@ export default function RunTimer() {
     const segs = resultSegs(run, Date.now())
     clear()
     nav('/running', { replace: true })
-    if (segs.some(s => s.sec >= 30)) runSheet({ draft: { d: todayISO(), segs, type: 'runwalk' } })
+    if (segs.some(s => s.sec >= 30)) runSheet({ draft: { d: todayISO(), segs, type: 'runwalk', preset: run.preset.id, at: run.start } })
   }
   const discard = () => { cancelCues(); clear(); nav('/running', { replace: true }) }
   const paused = run.pausedAt != null

@@ -88,8 +88,9 @@ export function weekOf(iso, start = 1) {
 
 /**
  * The last `n` weeks, oldest first, ending with the week of `today`:
- *   [{ week, km, sec, runKm, runSec, n, runs, walks }]
- * `runs` and `walks` count sessions by sport; `n` is all of them.
+ *   [{ week, km, sec, runKm, runSec, walkKm, n, runs, walks }]
+ * `runs` and `walks` count sessions by sport; `n` is all of them. `walkKm` is the walking known
+ * to be walking (walks and walking parts); a run without parts counts as running in `km - walkKm`.
  */
 export function runWeeks(S, n = 8, today = isoOf(new Date())) {
   const start = weekStartOf(S)
@@ -97,17 +98,17 @@ export function runWeeks(S, n = 8, today = isoOf(new Date())) {
   const weeks = []
   for (let i = n - 1; i >= 0; i--) {
     const w = isoOf(new Date(new Date(last + 'T12:00:00').getTime() - i * 7 * DAY))
-    weeks.push({ week: w, km: 0, sec: 0, runKm: 0, runSec: 0, n: 0, runs: 0, walks: 0 })
+    weeks.push({ week: w, km: 0, sec: 0, runKm: 0, runSec: 0, walkKm: 0, n: 0, runs: 0, walks: 0 })
   }
   const at = new Map(weeks.map(w => [w.week, w]))
   for (const a of runsOf(S)) {
     const w = at.get(weekOf(a.d, start))
     if (!w) continue
     const st = sessionStats(a)
-    w.km += st.km; w.sec += st.sec; w.runKm += st.runKm; w.runSec += st.runSec; w.n++
+    w.km += st.km; w.sec += st.sec; w.runKm += st.runKm; w.runSec += st.runSec; w.walkKm += st.walkKm; w.n++
     if (a.sport === 'walk') w.walks++; else w.runs++
   }
-  for (const w of weeks) { w.km = round2(w.km); w.runKm = round2(w.runKm) }
+  for (const w of weeks) { w.km = round2(w.km); w.runKm = round2(w.runKm); w.walkKm = round2(w.walkKm) }
   return weeks
 }
 

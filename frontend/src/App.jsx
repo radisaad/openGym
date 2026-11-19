@@ -103,6 +103,12 @@ const Tools = lazyView(() => import('./views/Tools.jsx'))
 const Journal = lazyView(() => import('./views/Journal.jsx'))
 const Running = lazyView(() => import('./views/Running.jsx'))
 const RunTimer = lazyView(() => import('./views/RunTimer.jsx'))
+// RadiGym's running side: Today is home; the gym's old home lives at /gym.
+const Today = lazyView(() => import('./views/Today.jsx'))
+const Activities = lazyView(() => import('./views/Activities.jsx'))
+const ActivityDetail = lazyView(() => import('./views/Activities.jsx').then(m => ({ ...m, default: m.ActivityDetail })))
+const Progress = lazyView(() => import('./views/Progress.jsx'))
+const Coaching = lazyView(() => import('./views/Coaching.jsx'))
 const ProgressPhotos = lazyView(() => import('./views/ProgressPhotos.jsx'))
 // The trainer dashboard (docs/TRAINERS.md): only for sessions that train someone or lead a gym.
 const Trainer = lazyView(() => import('./views/Trainer.jsx'))
@@ -398,7 +404,12 @@ function Shell() {
 
   const view = l => (!authed ? <Login /> : needsMobileOnboarding ? <MobileOnboarding /> : permSteps ? <PermissionSteps /> : (
     <Routes location={l}>
-      <Route path="/home" element={<Home />} />
+      <Route path="/home" element={<Today />} />
+      <Route path="/gym" element={<Home />} />
+      <Route path="/activities" element={<Activities />} />
+      <Route path="/activities/:id" element={<ActivityDetail />} />
+      <Route path="/progress" element={<Progress />} />
+      <Route path="/coaching" element={<Coaching />} />
       {/* A module switched off (Settings → Modules, lib/modules.js) takes its screens with it: the
           route falls through to the catch-all redirect below. The data stays where it is. */}
       {isOn(S, 'checkin') && <Route path="/checkin" element={<CheckIn />} />}

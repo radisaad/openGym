@@ -75,7 +75,7 @@ describe('the connection dot on Home', () => {
       expect(home().querySelector('.tab-dot')).toBeNull()
       act(() => { useStore.getState().update(s => { s.connStatus = false }, false) })
       expect(home().querySelector('.tab-dot')).not.toBeNull()
-      expect(home().getAttribute('aria-label')).toBe('Home, Connection problem')
+      expect(home().getAttribute('aria-label')).toBe('Today, Connection problem')
       act(() => { useStore.setState({ sync: { status: 'ok', lastError: null, pending: false } }) })
       expect(home().querySelector('.tab-dot')).toBeNull()
       expect(home().getAttribute('aria-label')).toBeNull()
@@ -90,8 +90,8 @@ describe('the tab icons and labels', () => {
   const label = el => el.querySelector('span:last-child').textContent
   it('labels every tab and uses one icon per concept', () => {
     act(() => { root.render(<TabBar onStart={() => {}} />) })
-    expect(tabs().map(icon)).toEqual(['house', 'figureRun', 'play', 'dumbbell', 'chart'])
-    expect(tabs().map(label)).toEqual(['Home', 'Running', 'Start', 'Gym', 'Stats'])
+    expect(tabs().map(icon)).toEqual(['house', 'list', 'play', 'chartLine', 'sparkles'])
+    expect(tabs().map(label)).toEqual(['Today', 'Activities', 'Start', 'Progress', 'Coach'])
 
     act(() => { useStore.getState().update(s => { s.active = { id: 'a', entries: [], cur: 0 } }, false) })
     expect(icon(tabs()[2])).toBe('play')
@@ -123,18 +123,19 @@ describe('the tab icons and labels', () => {
 describe('the tab a screen without its own lights', () => {
   const lit = () => tabs().filter(b => b.classList.contains('on')).map(b => b.textContent)
   it.each([
-    ['/history', 'Stats'], ['/structural-balance', 'Stats'], ['/progress-photos', 'Stats'], ['/measurements', 'Stats'],
-    ['/settings', 'Home'], ['/settings/units', 'Home'], ['/checkin', 'Home'], ['/muscles', 'Gym'], ['/library', 'Gym'],
-    ['/running/timer', 'Running'],
+    // RadiGym: the gym is one section opened from Today, so its pages light Today.
+    ['/history', 'Today'], ['/structural-balance', 'Today'], ['/progress-photos', 'Today'], ['/measurements', 'Today'],
+    ['/settings', 'Today'], ['/settings/units', 'Today'], ['/checkin', 'Today'], ['/muscles', 'Today'], ['/library', 'Today'],
+    ['/gym', 'Today'], ['/plan', 'Today'], ['/stats', 'Today'], ['/activities/one', 'Activities'],
   ])('%s lights %s', (pathname, tab) => {
     where.loc = { pathname }
     act(() => { root.render(<TabBar onStart={() => {}} />) })
     expect(lit()).toEqual([tab])
   })
 
-  it('Muscles opened from Stats lights Stats, the way its back button goes', () => {
-    where.loc = { pathname: '/muscles', state: { from: '/stats' } }
+  it('Progress lights Progress', () => {
+    where.loc = { pathname: '/progress' }
     act(() => { root.render(<TabBar onStart={() => {}} />) })
-    expect(lit()).toEqual(['Stats'])
+    expect(lit()).toEqual(['Progress'])
   })
 })

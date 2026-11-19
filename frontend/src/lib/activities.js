@@ -178,8 +178,10 @@ export function activityStimuli(S, now = Date.now(), windowMs = 30 * 86400e3) {
 // The names the native readWorkouts answer with (HealthConnectPlugin.java / AppleHealthPlugin.swift
 // sportName): the sports above, plus three that are not activities. 'strength' and 'gym' (an
 // elliptical, a stair machine, a treadmill, a spin bike, HIIT) belong in a workout, where openGym
-// logs them itself; 'walk' would bring every stroll a watch noticed.
-export const NOT_ACTIVITY = new Set(['strength', 'gym', 'walk'])
+// logs them itself. Walks come in (RadiGym's running log counts them), from 10 minutes: a walking
+// workout is one somebody started, not every stroll a watch noticed.
+export const NOT_ACTIVITY = new Set(['strength', 'gym'])
+export const WALK_MIN = 10
 
 // openGym's own records in the hub, and the watch app's: never read back as activities.
 const OWN_ORIGIN = /^(ch\.duartesantos\.opengym|ch\.opengym\.app)(\.|$)/
@@ -213,7 +215,7 @@ export function activityFromHealth(rec, S, src, now = Date.now()) {
   const start = Number(rec.start), end = Number(rec.end)
   if (!(start > 0) || !(end > start) || end > now + 60e3) return null
   const min = Math.round((end - start) / 60e3)
-  if (min < 5) return null
+  if (min < 5 || (sport === 'walk' && min < WALK_MIN)) return null
   if (overlapsWorkout(S, start, end)) return null
   return readActivity({ d: isoLocal(start), sport: SPORTS.includes(sport) ? sport : 'other', min, at: start, km: Number(rec.km) || 0, title: typeof rec.title === 'string' ? rec.title : '', src })
 }

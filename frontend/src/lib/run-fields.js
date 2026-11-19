@@ -11,7 +11,7 @@
 //   pain   { area: 0..10 } for the areas checked after it (PAIN_AREAS). A 0 is kept: "checked,
 //          nothing" is an answer, and the one a sore hip waits for
 //   cad    steps a minute, `elev` metres climbed, `hr` average heart rate, `steps` the step count
-//   shoe   the id of the pair worn (lib/shoes.js)
+//   shoe   the id of the pair worn (lib/shoes.js); `preset` the interval workout it followed
 
 export const RUN_SPORTS = new Set(['run', 'walk'])
 export const SEG_KINDS = ['run', 'walk']
@@ -77,5 +77,7 @@ export function readRunFields(entry, sport) {
   const steps = int(entry.steps, 1, 1e6)
   if (steps != null) out.steps = steps
   if (typeof entry.shoe === 'string' && /^[\w-]{1,40}$/.test(entry.shoe)) out.shoe = entry.shoe
+  // The interval workout it was run to (lib/run-intervals.js), for the coach's ladder (lib/run-plan.js).
+  if (typeof entry.preset === 'string' && /^[\w-]{1,40}$/.test(entry.preset)) out.preset = entry.preset
   return out
 }
