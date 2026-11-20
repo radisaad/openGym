@@ -59,3 +59,6 @@ frontend/ios/App/WatchCore/.build/
 
 # RadiGym server backups (scripts/radigym-server.ps1 backup)
 backups/
+
+# The RadiGym Tailscale node sign-in (docker-compose.tailscale.yml)
+tailscale-state/

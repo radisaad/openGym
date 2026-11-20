@@ -1,0 +1,21 @@
+# RadiGym on its own Tailscale node, for a machine without Tailscale installed on it (Ubuntu in
+# WSL while Tailscale runs on Windows, or no sudo). scripts/radigym-server.sh turns it on by putting
+# COMPOSE_FILE=docker-compose.yml:docker-compose.tailscale.yml in .env.
+#
+# The node is called "radigym" (https://radigym.<tailnet>.ts.net) and Tailscale Funnel serves the
+# web container on 443 to the internet. Its sign-in lives in ./tailscale-state (not in git, not in
+# data/ backups). No tun device or extra privileges: userspace networking is enough for Funnel.
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    hostname: ${TS_HOSTNAME:-radigym}
+    restart: unless-stopped
+    environment:
+      - TS_HOSTNAME=${TS_HOSTNAME:-radigym}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_USERSPACE=true
+      - TS_ACCEPT_DNS=false
+      - TS_SERVE_CONFIG=/config/serve.json
+    volumes:
+      - ./tailscale-state:/var/lib/tailscale
+      - ./tailscale/serve.json:/config/serve.json:ro

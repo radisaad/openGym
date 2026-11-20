@@ -31,15 +31,52 @@ need_docker() {
   "${DOCKER[@]}" compose version >/dev/null 2>&1 || fail 'The docker compose plugin is missing: sudo apt install docker-compose-plugin'
 }
 
-TS=(tailscale)
+# Where Tailscale runs. "host": installed on this machine (tailscale up). "docker": RadiGym gets its
+# own Tailscale node in a container (docker-compose.tailscale.yml), for a machine where Tailscale is
+# not installed, such as Ubuntu in WSL while Tailscale runs on Windows. RADIGYM_TAILSCALE=host|docker
+# chooses; unset, the host is used when its tailscale is signed in.
+TS_MODE="${RADIGYM_TAILSCALE:-}"
+ts_mode() {
+  if [ -z "$TS_MODE" ]; then
+    if grep -q '^COMPOSE_FILE=.*docker-compose.tailscale.yml' "$ENV_FILE" 2>/dev/null; then TS_MODE=docker
+    elif command -v tailscale >/dev/null && tailscale status --json >/dev/null 2>&1; then TS_MODE=host
+    else TS_MODE=docker; fi
+  fi
+}
+
+dns_name() { sed -n 's/.*"DNSName": *"\([^"]*\)".*/\1/p' | head -1; }
+
 host_name() {
   command -v tailscale >/dev/null || fail 'Tailscale is not installed: curl -fsSL https://tailscale.com/install.sh | sh'
   local json
   json="$(tailscale status --json 2>/dev/null)" || fail 'Tailscale is not connected: sudo tailscale up'
   local name
-  name="$(printf '%s' "$json" | sed -n 's/.*"DNSName": *"\([^"]*\)".*/\1/p' | head -1)"
+  name="$(printf '%s' "$json" | dns_name)"
   [ -n "$name" ] || fail 'Tailscale gave no name for this machine. Is it signed in? sudo tailscale up'
   printf '%s' "${name%.}"
+}
+
+# The container node: start it, and either print its name or the sign-in link for the owner.
+docker_host_name() {
+  set_env COMPOSE_FILE docker-compose.yml:docker-compose.tailscale.yml
+  mkdir -p tailscale-state
+  "${DOCKER[@]}" compose up -d tailscale >&2
+  local json name link
+  for _ in $(seq 40); do
+    json="$("${DOCKER[@]}" compose exec -T tailscale tailscale status --json 2>/dev/null || true)"
+    if printf '%s' "$json" | grep -q '"BackendState": *"Running"'; then
+      name="$(printf '%s' "$json" | dns_name)"
+      [ -n "$name" ] && { printf '%s' "${name%.}"; return; }
+    fi
+    link="$("${DOCKER[@]}" compose logs tailscale 2>/dev/null | grep -o 'https://login.tailscale.com/a/[A-Za-z0-9]*' | tail -1 || true)"
+    if [ -n "$link" ]; then
+      printf '\n!! The RadiGym Tailscale node needs a sign-in, once. Open this link and sign in\n' >&2
+      printf '   with your Tailscale account, then run setup again:\n\n   %s\n' "$link" >&2
+      exit 2
+    fi
+    sleep 3
+  done
+  fail "The Tailscale container did not come up. Look at: ${DOCKER[*]} compose logs tailscale"
 }
 
 # KEY=value in .env, every other line kept as it is.
@@ -67,6 +104,11 @@ wait_healthy() {
 
 funnel() {
   say 'Opening https on Tailscale Funnel'
+  if [ "$TS_MODE" = docker ]; then
+    # tailscale/serve.json already serves and funnels the web container; show what it does.
+    "${DOCKER[@]}" compose exec -T tailscale tailscale funnel status || true
+    return
+  fi
   if ! sudo tailscale funnel --bg "$PORT"; then
     echo 'Tailscale needs Funnel switched on for your account once: open the link printed above,'
     echo 'allow HTTPS certificates and Funnel, then run this command again.'
@@ -78,7 +120,8 @@ cmd="${1:-status}"
 case "$cmd" in
   setup)
     need_docker
-    host="$(host_name)"
+    ts_mode
+    if [ "$TS_MODE" = docker ]; then host="$(docker_host_name)"; else host="$(host_name)"; fi
     say "This server will be https://$host"
     set_env RP_ID "$host"
     set_env ORIGIN "https://$host"
@@ -117,8 +160,10 @@ case "$cmd" in
     ;;
   status)
     need_docker
+    ts_mode
     "${DOCKER[@]}" compose ps
-    tailscale funnel status 2>/dev/null || sudo tailscale funnel status || true
+    if [ "$TS_MODE" = docker ]; then "${DOCKER[@]}" compose exec -T tailscale tailscale funnel status || true
+    else tailscale funnel status 2>/dev/null || sudo tailscale funnel status || true; fi
     ;;
   backup)
     mkdir -p backups
