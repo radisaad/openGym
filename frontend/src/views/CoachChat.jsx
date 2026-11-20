@@ -63,7 +63,9 @@ export default function CoachChat() {
   // Before the status poll: it only runs where there is a Coach to ask (see useCoachStatus).
   const gate = useCoachGate()
   const { job, pending, cap, loading, lastError, last, refresh, maxMessageLen } = useCoachStatus(gate.ok)
-  const [text, setText] = useState('')
+  // A question handed over from RadiGym's Coach screen (views/Coaching.jsx) starts in the box.
+  // React Router keeps a navigation's state in history.state.usr.
+  const [text, setText] = useState(() => { try { const a = globalThis.history?.state?.usr?.ask; return typeof a === 'string' ? a : '' } catch { return '' } })
   // The message box opened into a tall editor (components/ChatInput.jsx); closed again on send.
   const [expanded, setExpanded] = useState(false)
   const [busy, setBusy] = useState(false)

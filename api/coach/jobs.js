@@ -257,6 +257,7 @@ export function enqueue(uid, opts) {
     vitals: (opts.kind === 'ask' || opts.kind === 'review') && opts.vitals && typeof opts.vitals === 'object' ? opts.vitals : null,
     // Library routines the app found for a question (core/routine-library.js cleanHits bounds them).
     routines: opts.kind === 'ask' && Array.isArray(opts.routines) ? opts.routines.slice(0, 8) : null,
+    run: opts.kind === 'ask' && typeof opts.run === 'string' ? opts.run.slice(0, payloadLib.RUN_BRIEF_MAX) : null,
     // An adapt job's exercise and reason, and the session it belongs to (so the phone can tell a
     // proposal for this workout from one for a workout that has ended).
     focus: opts.kind === 'adapt' && opts.focus && typeof opts.focus === 'object' ? { entry: opts.focus.entry, reason: opts.focus.reason } : null,
@@ -386,6 +387,7 @@ async function execute(job) {
     focus: job.focus,
     vitals: job.vitals,
     routines: job.routines,
+    run: job.run,
     web: useWeb,
     // The app says which language it is in. A scheduled review has no app behind it: a profile
     // that never picked a language then gets the instance's DEFAULT_LANG, like its screens do.

@@ -6167,4 +6167,7 @@ export default {
   "8 wk": "8 sem",
   "12 wk": "12 sem",
   "6 mo": "6 mois",
+  "Claude answers right here in RadiGym, with your running log.": "Claude répond ici même dans RadiGym, avec ton journal de course.",
+  "Claude is not connected yet, so this opens claude.ai with your brief copied.": "Claude n’est pas encore connecté : ça ouvre claude.ai avec ton résumé copié.",
+  "Connect Claude in the app": "Connecter Claude dans l’app",
 }

@@ -131,7 +131,9 @@ export function coachRoutes({ json, readBody, readSession, requireAdmin }) {
           note: text.slice(0, cfgStore.MAX_MESSAGE_LEN_CEILING),
           today: body.today && typeof body.today === 'object' && !Array.isArray(body.today) ? body.today : null,
           vitals: body.vitals && typeof body.vitals === 'object' && !Array.isArray(body.vitals) ? body.vitals : null,
-          routines: Array.isArray(body.routines) ? body.routines.slice(0, 8) : null
+          routines: Array.isArray(body.routines) ? body.routines.slice(0, 8) : null,
+          // RadiGym: the runner's log as a brief (frontend lib/run-coach-brief.js), cut in jobs.js.
+          run: typeof body.run === 'string' ? body.run : null
         });
         json(res, 202, { job });
       } catch (e) { failEnqueue(res, e); }

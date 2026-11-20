@@ -608,6 +608,8 @@ export function workoutMeta(S, workoutId) {
  * keeps it. Either way it is 16 characters and never the uid.
  */
 export const TASKS = ['create', 'review', 'debrief', 'ask', 'adapt'];
+// RadiGym: the runner's log as plain text (frontend lib/run-coach-brief.js), sent with a question.
+export const RUN_BRIEF_MAX = 12000;
 // Why someone asks the Coach about an exercise in the middle of a workout (the `adapt` job).
 export const ADAPT_REASONS = ['pain', 'busy', 'short', 'great', 'tired', 'other'];
 export const ADAPT_RECENT = 3;
@@ -717,6 +719,7 @@ export function build(S, opts = {}) {
     // A question in the chat: the recent sessions (the newest in full), the stalls, and the
     // session running now when the phone sent it.
     p.question = String(opts.note || '').slice(0, MAX_NOTE_CHARS);
+    if (typeof opts.run === 'string' && opts.run.trim()) p.running = opts.run.slice(0, RUN_BRIEF_MAX);
     const workouts = (S.workouts || []).filter(w => w && w.d).slice(-ASK_SESSIONS);
     const detailFrom = Math.max(0, workouts.length - FULL_DETAIL_SESSIONS);
     p.window = {

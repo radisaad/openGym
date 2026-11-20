@@ -1,14 +1,21 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
 import { t } from '../lib/i18n.js'
 import { dateLocale } from '../lib/i18n-core.js'
 import { todayISO } from '../lib/format.js'
+import { MOBILE } from '../lib/mobile.js'
+import { DEMO } from '../lib/demo.js'
+import { isOn } from '../lib/modules.js'
+import { coachAvailable } from '../lib/coach.js'
 import { copyText } from '../lib/clipboard.js'
 import { readiness } from '../lib/run-load.js'
 import { todayPlan, weekPlan } from '../lib/run-plan.js'
 import { presetsOf } from '../lib/run-intervals.js'
 import { coachBrief } from '../lib/run-coach-brief.js'
+import { readRunProfile } from '../lib/run-import.js'
+import { goalsOf } from '../lib/run-plan.js'
 import { presetName, startInterval } from '../components/IntervalSheet.jsx'
 import { useVitals } from '../components/ActivityCard.jsx'
 import { checkinSheet } from '../components/RaSheets.jsx'
@@ -22,6 +29,16 @@ import '../radi.css'
 // hands Claude the whole picture (lib/run-coach-brief.js) with your question; the conversation
 // moves inside RadiGym once your server runs the coach.
 
+// The coach profile for a runner, from what RadiGym already knows (no gym questionnaire).
+function runnerProfile(S) {
+  const p = readRunProfile(S.runProfile)
+  return {
+    goal: 'running', experience: 'returning runner', daysPerWeek: goalsOf(S).runs || 2, preferredDays: [], sessionMin: 40,
+    equipment: ['running shoes'], limitations: p.watch.length ? `Watch: ${p.watch.join(', ')}. ${p.notes}`.slice(0, 500) : p.notes.slice(0, 500),
+    likes: 'running, run/walk intervals, music', dislikes: '', notes: (p.goal || 'RadiGym running coach').slice(0, 300),
+  }
+}
+
 const ASK = [
   'How should I run this week?',
   'Is my hip ready for a harder run?',
@@ -31,8 +48,15 @@ const ASK = [
 ]
 
 export default function Coaching() {
+  const nav = useNavigate()
   const S = useStore(s => s.S)
+  const config = useStore(s => s.config)
+  const user = useStore(s => s.user)
+  const coachMode = useStore(s => s.coachLocal?.mode)
+  // Claude in the app: through your server's coach, or on the phone with your own key.
+  const inApp = isOn(S, 'coach') && coachAvailable(config, user, { demo: DEMO, mobile: MOBILE, coachMode })
   const toast = useUI(s => s.toast)
+  const update = useStore(s => s.update)
   const today = todayISO()
   const vitals = useVitals(today)
   const ready = readiness(S, today, { vitals })
@@ -43,6 +67,14 @@ export default function Coaching() {
 
   const ask = async () => {
     const question = q.trim() || t(ASK[0])
+    // In the app: the chat sends your running brief with every question (lib/coach-api.js).
+    if (inApp) {
+      // The chat wants a coach profile, which the gym questionnaire would ask for: a runner's comes
+      // from the running setup instead. The consent screen still shows first, as always.
+      if (!S.coach?.profile) update(s => { s.coach = { ...(s.coach || {}), profile: runnerProfile(s) } })
+      nav('/coach', { state: { ask: question } })
+      return
+    }
     const text = `${coachBrief(S, today, { vitals })}\n\n---\nMy question: ${question}`
     const ok = await copyText(text)
     toast(ok ? t('Copied. Paste it into Claude to start.') : t('Could not copy. Use Copy my coach brief instead.'))
@@ -79,7 +111,9 @@ export default function Coaching() {
         <Button variant="primary" icon="sparkles" onClick={ask}>{t('Ask Claude')}</Button>
         <Button icon="copy" onClick={copyBrief}>{t('Copy my coach brief')}</Button>
       </div>
-      <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('For now this opens Claude with your brief copied. Once your RadiGym server runs, the conversation happens right here.')}</div>
+      {inApp ? <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('Claude answers right here in RadiGym, with your running log.')}</div>
+        : <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('Claude is not connected yet, so this opens claude.ai with your brief copied.')}{' '}
+          <button type="button" className="ra-link ra-small" onClick={() => nav('/coach/setup')}>{t('Connect Claude in the app')}</button></div>}
     </div>
 
     <div className="ra-card">

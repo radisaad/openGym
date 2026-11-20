@@ -12,6 +12,7 @@ import { MOBILE } from './mobile.js'
 import { t, tn, getLang } from './i18n.js'
 import { useStore } from '../store/useStore.js'
 import { todayForCoach } from './coach-context.js'
+import { todayISO } from './format.js'
 import { shareOf } from '../../../api/coach/core/categories.js'
 import { useUI } from '../store/useUI.js'
 
@@ -106,15 +107,19 @@ export const requestDebrief = (...a) => asked(_requestDebrief)(...a).then(track)
 // (lib/coach-context.js): the server never holds it.
 // Routines from the library that match the question (lib/routine-library.js), so the Coach can
 // offer one to import. Lazy: the library carries the exercise catalogue.
+// RadiGym: the running log as a brief (lib/run-coach-brief.js), so the chat coaches the runner.
+async function runBriefFor(st) {
+  try { const { coachBrief } = await import('./run-coach-brief.js'); return coachBrief(st, todayISO()) } catch { return null }
+}
 async function routinesForCoach(st, text) {
   try { return await (await import('./routine-library.js')).routineHits(st, text) } catch { return [] }
 }
 const _askCoach = async text => {
   if (DEMO) return (await demo()).demoAsk(S(), text)
   const st = S()
-  const [vitals, routines] = await Promise.all([vitalsForCoach(st), routinesForCoach(st, text)])
-  return LOCAL() ? (await local()).localAsk(st, text, todayForCoach(st), vitals, routines)
-    : api('/api/coach/ask', { method: 'POST', body: JSON.stringify({ text, today: todayForCoach(st), lang: getLang(), vitals, routines }) })
+  const [vitals, routines, run] = await Promise.all([vitalsForCoach(st), routinesForCoach(st, text), runBriefFor(st)])
+  return LOCAL() ? (await local()).localAsk(st, text, todayForCoach(st), vitals, routines, run)
+    : api('/api/coach/ask', { method: 'POST', body: JSON.stringify({ text, today: todayForCoach(st), lang: getLang(), vitals, routines, run }) })
 }
 export const askCoach = (...a) => asked(_askCoach)(...a).then(track)
 // "Ask the Coach" on an exercise mid-workout (the `adapt` job): `entry` is its index in the running
