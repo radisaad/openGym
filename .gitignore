@@ -56,3 +56,6 @@ frontend/ios/App/WatchCore/.build/
 /dist/
 .wrangler/
 .taste-skill/
+
+# RadiGym server backups (scripts/radigym-server.ps1 backup)
+backups/

@@ -1,10 +1,12 @@
+# RadiGym (this fork): the images are built here from the fork's own source (docker compose up
+# --build), under local names, so a pull can never swap in upstream openGym. docs/SERVER_WINDOWS.md.
 name: opengym
 
 services:
   # Passkey auth + per-user data (Node, no framework).
   # image: prebuilt (docker compose pull). build: from source (docker compose up --build).
   api:
-    image: ghcr.io/duartesantos8/opengym-api:latest
+    image: radigym-api:local
     # Default target: no AI runtime, no AI dependency — the image every instance has always had.
     # To opt into the AI Coach, build the other target instead:
     #     API_TARGET=coach docker compose up --build api
@@ -35,7 +37,7 @@ services:
   # Builds the React frontend (multi-stage) and serves it, proxying /api → api
   # and the exercise animations, which are part of the image. Single origin for passkeys.
   web:
-    image: ghcr.io/duartesantos8/opengym-web:latest
+    image: radigym-web:local
     build:
       context: .
       dockerfile: web/Dockerfile
@@ -77,7 +79,7 @@ services:
   # each request's own token. docs/MCP_REMOTE.md.
   mcp:
     profiles: [mcp]
-    image: ghcr.io/duartesantos8/opengym-mcp:latest
+    image: radigym-mcp:local
     build:
       context: .
       dockerfile: mcp/Dockerfile
