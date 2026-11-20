@@ -8,7 +8,6 @@
 // outing's and is shown as that. A 7:03 run/walk average is not a 7:03 runner.
 import { activitiesOf } from './activities.js'
 import { RUN_SPORTS } from './run-fields.js'
-import { fmtClock } from './calculators.js'
 import { weekStartOf, isoOf } from './format.js'
 
 // Run types whose whole time is running even with no parts logged.
@@ -65,8 +64,13 @@ export function fmtPace(secPerKm) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 }
 
-/** "h:mm:ss" or "m:ss". */
-export const fmtTime = sec => fmtClock(Math.max(0, Number(sec) || 0))
+/** "h:mm:ss" or "m:ss". Written out here rather than taken from calculators.js, so this module
+ *  stays loadable outside the browser (the MCP server reads the running log through it). */
+export function fmtTime(sec) {
+  const s = Math.round(Math.max(0, Number(sec) || 0))
+  const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60
+  return h ? `${h}:${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}` : `${m}:${String(r).padStart(2, '0')}`
+}
 
 /** Seconds from "1:02:03", "50:38", "10" (minutes) or "10,5"; null when it does not read. */
 export function parseTime(text) {

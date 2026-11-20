@@ -112,8 +112,8 @@ export default function Coaching() {
         <Button icon="copy" onClick={copyBrief}>{t('Copy my coach brief')}</Button>
       </div>
       {inApp ? <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('Claude answers right here in RadiGym, with your running log.')}</div>
-        : <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('Claude is not connected yet, so this opens claude.ai with your brief copied.')}{' '}
-          <button type="button" className="ra-link ra-small" onClick={() => nav('/coach/setup')}>{t('Connect Claude in the app')}</button></div>}
+        : <div className="ra-small ra-muted" style={{ marginTop: 10 }}>{t('This opens Claude with your question and running brief copied. Connect RadiGym to Claude once and it reads your runs by itself, on your own Claude plan.')}{' '}
+          <button type="button" className="ra-link ra-small" onClick={() => nav('/assistants')}>{t('Connect RadiGym to Claude')}</button></div>}
     </div>
 
     <div className="ra-card">

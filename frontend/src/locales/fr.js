@@ -6170,4 +6170,8 @@ export default {
   "Claude answers right here in RadiGym, with your running log.": "Claude répond ici même dans RadiGym, avec ton journal de course.",
   "Claude is not connected yet, so this opens claude.ai with your brief copied.": "Claude n’est pas encore connecté : ça ouvre claude.ai avec ton résumé copié.",
   "Connect Claude in the app": "Connecter Claude dans l’app",
+  "Use my Claude plan": "Utiliser mon abonnement Claude",
+  "Connect RadiGym to the Claude app you already use. Claude reads your runs there, with no extra cost.": "Connecte RadiGym à l’app Claude que tu utilises déjà. Claude y lit tes courses, sans frais en plus.",
+  "This opens Claude with your question and running brief copied. Connect RadiGym to Claude once and it reads your runs by itself, on your own Claude plan.": "Ça ouvre Claude avec ta question et ton résumé copiés. Connecte RadiGym à Claude une fois et il lira tes courses tout seul, avec ton propre abonnement Claude.",
+  "Connect RadiGym to Claude": "Connecter RadiGym à Claude",
 }

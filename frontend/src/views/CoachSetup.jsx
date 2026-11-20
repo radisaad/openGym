@@ -9,6 +9,7 @@
 // imports from the Coach core are the provider table and the five category names — the
 // catalogue, the prompts and the validator arrive through one dynamic import, behind a
 // progress line that reports real steps rather than a pretend byte counter.
+import { PAID_API_KEYS } from '../lib/brand.js'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
@@ -254,9 +255,12 @@ export default function CoachSetup() {
       <Row icon="rocket" iconTint="var(--indigo)" title={t('Use my self-hosted openGym')}
         subtitle={user ? (serverHasCoach ? t('Your server runs the Coach with whatever provider its admin set up. Nothing new leaves this phone beyond what already syncs.') : config == null ? t('Loading…') : t('Your server has no Coach enabled. Ask its admin, or bring your own key below.')) : t('Connect to my server')}
         accessory="chevron" onClick={() => { if (!user || serverHasCoach) useServer(); else setChoice('server') }} />
-      <Row icon="key" iconTint="var(--acc)" title={t('Bring my own API key')}
+      {PAID_API_KEYS ? <Row icon="key" iconTint="var(--acc)" title={t('Bring my own API key')}
         subtitle={t('This phone calls the provider directly with your key. Every request is charged to your account.')}
         accessory="chevron" onClick={() => setChoice('byok')} />
+        : <Row icon="chat" iconTint="var(--acc)" title={t('Use my Claude plan')}
+          subtitle={t('Connect RadiGym to the Claude app you already use. Claude reads your runs there, with no extra cost.')}
+          accessory="chevron" onClick={() => nav('/assistants')} />}
     </Section>
 
     {choice === 'server' && !serverHasCoach && <div className="card">

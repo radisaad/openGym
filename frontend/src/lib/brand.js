@@ -12,3 +12,8 @@ export const APP_NAME = TESTING ? 'openGym' : NAME
 /** `s` with the upstream name replaced by `name`. */
 export const brandWith = (s, name) => (typeof s === 'string' && s.includes('openGym') ? s.replaceAll('openGym', name) : s)
 export const brand = s => (TESTING ? s : brandWith(s, APP_NAME))
+
+// No pay-per-use API keys in RadiGym (the owner's choice): the coach's "Bring my own API key" is
+// not offered. Claude comes through the owner's own Claude plan instead, with RadiGym connected to
+// Claude (Coach → Use your subscription, the MCP connector). Upstream's tests of that flow still run.
+export const PAID_API_KEYS = TESTING

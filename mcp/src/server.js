@@ -16,6 +16,8 @@ export const TOOL_NEEDS = {
   list_routines: ['plans', 'view'], get_routine: ['plans', 'view'], preview_session: ['plans', 'view'],
   get_week_plan: ['plans', 'view'], get_programme: ['plans', 'view'],
   list_workouts: ['workouts', 'view'], get_workout: ['workouts', 'view'], estimate_1rm: ['workouts', 'view'],
+  // RadiGym: the running log is activities, which tokens read as workouts (api/tokens.js).
+  get_running_coach_brief: ['workouts', 'view'], list_runs: ['workouts', 'view'],
   muscle_balance: ['workouts', 'view'], get_bodyweight: ['bodyweight', 'view'],
   // The library is not the user's data: any token that may see workouts or plans gets it.
   search_exercises: [['workouts', 'view'], ['plans', 'view']],

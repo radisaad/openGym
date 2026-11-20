@@ -87,6 +87,8 @@ switch ($Command) {
     Set-Env 'RP_NAME' 'RadiGym'
     Set-Env 'WEB_PORT' "$Port"
     Set-Env 'FIRST_USER_ADMIN' '1'
+    Set-Env 'COMPOSE_PROFILES' 'mcp'
+    Set-Env 'MCP' 'on'
     Say 'Building RadiGym from this folder and starting it (the first build takes several minutes)'
     docker compose up -d --build
     if ($LASTEXITCODE -ne 0) { Fail 'The build failed. Copy the last lines above to Claude.' }

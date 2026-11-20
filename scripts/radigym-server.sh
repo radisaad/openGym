@@ -85,6 +85,10 @@ case "$cmd" in
     set_env RP_NAME RadiGym
     set_env WEB_PORT "$PORT"
     set_env FIRST_USER_ADMIN 1
+    # Claude on the owner's own Claude plan: RadiGym as a connector inside Claude (docs/MCP_REMOTE.md).
+    # No pay-per-use API key anywhere.
+    set_env COMPOSE_PROFILES mcp
+    set_env MCP on
     say 'Building RadiGym from this folder and starting it (the first build takes several minutes)'
     "${DOCKER[@]}" compose up -d --build
     wait_healthy
@@ -94,6 +98,8 @@ case "$cmd" in
     echo '2. Then run:  scripts/radigym-server.sh lock'
     echo '3. In Safari: Settings > Pair the mobile app. In the RadiGym app: Settings > Server & sync,'
     echo "   type https://$host and the code."
+    echo "4. Claude: in the Claude app, Customize > Connectors > Add custom connector, name RadiGym,"
+    echo "   address https://$host/mcp, then Connect and sign in to RadiGym."
     ;;
   lock)
     need_docker

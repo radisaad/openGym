@@ -2,6 +2,8 @@
    {0}/{1} template the lib returns so the LLM gets final text, not template strings.
    ISO dates are validated on the way in; the handlers never see 'yesterday'. */
 import { z } from 'zod'
+import { coachBrief } from '../../frontend/src/lib/run-coach-brief.js'
+import { runsOf, sessionStats, fmtPace, fmtTime } from '../../frontend/src/lib/running.js'
 import { getState, getUser } from './state.js'
 import { setNoteOf } from '../../frontend/src/lib/set-notes.js'
 import { setTagCell } from '../../frontend/src/lib/set-tags.js'
@@ -794,8 +796,51 @@ export const searchExercises = {
   }
 }
 
+/** RadiGym: the runner's whole picture, the same brief the app's coach builds. */
+export const getRunningCoachBrief = {
+  name: 'get_running_coach_brief',
+  description: 'RadiGym is a running app: call this FIRST for any question about running, training, recovery, pain or plans. Returns the runner\'s coaching brief as text: their goal, notes and injury history, the rules their coaching follows, readiness, training load, weekly goals, today\'s planned session, the week ahead, race predictions and their recent runs and walks with both paces (running pace and overall pace; a run/walk average is never a running pace). Coach from it: consistency and recovery first, and never advise running through sharp or localised pain.',
+  schema: {},
+  handler: () => {
+    const S = getState()
+    if (!S) return noState()
+    return { brief: coachBrief(S, todayIso()) }
+  }
+}
+
+/** RadiGym: the runs and walks, newest first, with both paces. */
+export const listRuns = {
+  name: 'list_runs',
+  description: 'List the runner\'s runs and walks, newest first: date, kind, distance (km), time, running pace (running parts only, null when unknown), overall pace, share of time running, effort 1-10, pain answers 0-10 by area, and notes. For questions about specific sessions or trends; get_running_coach_brief gives the overall picture.',
+  schema: {
+    from: isoDate().optional().describe('Inclusive start date YYYY-MM-DD.'),
+    to: isoDate().optional().describe('Inclusive end date YYYY-MM-DD.'),
+    limit: z.number().int().min(1).max(200).optional().describe('At most this many, default 30.')
+  },
+  handler: ({ from, to, limit } = {}) => {
+    const S = getState()
+    if (!S) return noState()
+    const list = runsOf(S).filter(a => (!from || a.d >= from) && (!to || a.d <= to)).slice(0, limit || 30)
+    return {
+      count: list.length,
+      runs: list.map(a => {
+        const st = sessionStats(a)
+        return {
+          date: a.d, kind: a.sport, type: a.type || null, title: a.title || null,
+          km: st.km || null, time: fmtTime(st.sec),
+          running_pace: st.runPace ? fmtPace(st.runPace) + '/km' : null,
+          overall_pace: st.pace ? fmtPace(st.pace) + '/km' : null,
+          running_share: st.runShare != null ? Math.round(st.runShare * 100) / 100 : null,
+          parts: a.segs?.map(g => ({ kind: g.k, time: fmtTime(g.sec), km: g.km ?? null })) || null,
+          effort: a.rpe || null, pain: a.pain || null, cadence: a.cad || null, climb_m: a.elev ?? null, note: a.note || null,
+        }
+      })
+    }
+  }
+}
+
 export const TOOLS = [
-  listRoutines, getRoutine, previewSession, getWeekPlan, listWorkouts, getWorkout, getBodyweight, estimate1rm, muscleBalance, getProgramme, searchExercises
+  getRunningCoachBrief, listRuns, listRoutines, getRoutine, previewSession, getWeekPlan, listWorkouts, getWorkout, getBodyweight, estimate1rm, muscleBalance, getProgramme, searchExercises
 ]
 
 function noState() {
