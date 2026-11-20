@@ -31,6 +31,11 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up                          # opens a sign-in link
 ```
 
+No Tailscale on this machine (Ubuntu in WSL while Tailscale runs on Windows, or no sudo)? Skip the
+last two lines: `setup` then gives RadiGym its own Tailscale node in Docker, called `radigym`
+(`docker-compose.tailscale.yml`), and prints a sign-in link for it once. The address becomes
+`https://radigym.<tailnet>.ts.net`. `RADIGYM_TAILSCALE=host` or `docker` forces one or the other.
+
 ## 2. Start RadiGym
 
 ```bash

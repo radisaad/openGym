@@ -57,24 +57,49 @@ host_name() {
 }
 
 # The container node: start it, and either print its name or the sign-in link for the owner.
+# The image's own start-up gives an interactive sign-in only a minute before it restarts with a new
+# link, so the first sign-in runs in a one-off container (radigym-ts-login) that waits for as long
+# as it takes; once that has exited, the state in tailscale-state is signed in for good.
+TS_LOGIN=radigym-ts-login
+ts_running() {
+  "${DOCKER[@]}" compose exec -T tailscale tailscale status --json 2>/dev/null | grep -q '"BackendState": *"Running"'
+}
 docker_host_name() {
   set_env COMPOSE_FILE docker-compose.yml:docker-compose.tailscale.yml
   mkdir -p tailscale-state
-  "${DOCKER[@]}" compose up -d tailscale >&2
   local json name link
-  for _ in $(seq 40); do
+  if [ "$("${DOCKER[@]}" inspect -f '{{.State.Running}}' "$TS_LOGIN" 2>/dev/null)" = false ]; then
+    "${DOCKER[@]}" rm "$TS_LOGIN" >/dev/null
+  fi
+  if ! "${DOCKER[@]}" inspect "$TS_LOGIN" >/dev/null 2>&1; then
+    "${DOCKER[@]}" compose up -d tailscale >&2
+    for _ in $(seq 10); do ts_running && break; sleep 2; done
+    if ! ts_running; then
+      "${DOCKER[@]}" compose stop tailscale >&2
+      "${DOCKER[@]}" compose run -d --name "$TS_LOGIN" --no-deps --entrypoint sh tailscale -c \
+        'tailscaled --tun=userspace-networking --statedir=/var/lib/tailscale --socket=/tmp/ts.sock & sleep 3; tailscale --socket=/tmp/ts.sock up --hostname="$TS_HOSTNAME" --accept-dns=false' >&2
+    fi
+  fi
+  if "${DOCKER[@]}" inspect "$TS_LOGIN" >/dev/null 2>&1; then
+    for _ in $(seq 20); do
+      link="$("${DOCKER[@]}" logs "$TS_LOGIN" 2>&1 | grep -o 'https://login.tailscale.com/a/[A-Za-z0-9]*' | tail -1 || true)"
+      [ -n "$link" ] && break; sleep 1
+    done
+    if [ "$("${DOCKER[@]}" inspect -f '{{.State.Running}}' "$TS_LOGIN")" = true ]; then
+      printf '\n!! The RadiGym Tailscale node needs a sign-in, once. Open this link and sign in\n' >&2
+      printf '   with your Tailscale account, then run setup again:\n\n   %s\n' "${link:-(none yet: docker logs $TS_LOGIN)}" >&2
+      exit 2
+    fi
+    "${DOCKER[@]}" rm "$TS_LOGIN" >/dev/null
+    "${DOCKER[@]}" compose up -d tailscale >&2
+  fi
+  for _ in $(seq 30); do
     json="$("${DOCKER[@]}" compose exec -T tailscale tailscale status --json 2>/dev/null || true)"
     if printf '%s' "$json" | grep -q '"BackendState": *"Running"'; then
       name="$(printf '%s' "$json" | dns_name)"
       [ -n "$name" ] && { printf '%s' "${name%.}"; return; }
     fi
-    link="$("${DOCKER[@]}" compose logs tailscale 2>/dev/null | grep -o 'https://login.tailscale.com/a/[A-Za-z0-9]*' | tail -1 || true)"
-    if [ -n "$link" ]; then
-      printf '\n!! The RadiGym Tailscale node needs a sign-in, once. Open this link and sign in\n' >&2
-      printf '   with your Tailscale account, then run setup again:\n\n   %s\n' "$link" >&2
-      exit 2
-    fi
-    sleep 3
+    sleep 2
   done
   fail "The Tailscale container did not come up. Look at: ${DOCKER[*]} compose logs tailscale"
 }
