@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyLists-1.0.dtd">
+<!-- RadiGym's personal build (docs/IPHONE.md): only what a free Apple ID can sign and the running
+     app needs, HealthKit for Apple Health. Upstream's App.entitlements also asks for associated
+     domains (opengym.ch links), NFC tags and an app group for the watch and widgets, which a
+     free account cannot sign and this build does not ship. -->
+<plist version="1.0">
+<dict>
+	<key>com.apple.developer.healthkit</key>
+	<true/>
+	<key>com.apple.developer.healthkit.access</key>
+	<array/>
+</dict>
+</plist>
