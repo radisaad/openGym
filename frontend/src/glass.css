@@ -1,0 +1,144 @@
+/* ============================================================================
+   RadiGym: Liquid Glass layer
+   ----------------------------------------------------------------------------
+   Loaded after index.css (main.jsx). It does not replace the design system there: it adds
+   glass materials and applies them to the things that float over the page (the tab bar, the
+   rest timer, toasts, sheets, menus, the round header buttons), while the content itself
+   (cards, lists, stats, charts) stays on solid surfaces, where numbers read best mid-set.
+
+   Rules:
+   1. Glass is for controls that float, never for content.
+   2. Every glass surface has an opaque twin: Reduce Transparency, and browsers without
+      backdrop-filter, get it (bottom of this file).
+   3. Text on glass sits on a tint dense enough to read whatever scrolls behind it.
+   4. One highlight per surface: a thin light edge on top, a soft shadow under.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+:root{
+  /* Materials, by thickness. A thicker one hides more of what is behind it. */
+  --glass-thin:   rgba(44,44,48,.46);
+  --glass:        rgba(36,36,40,.62);
+  --glass-thick:  rgba(28,28,32,.78);
+  --glass-blur:   saturate(185%) blur(22px);
+  --glass-blur-lg:saturate(190%) blur(34px);
+  /* The light edge: brighter on top, fading down the sides. */
+  --glass-edge:   rgba(255,255,255,.14);
+  --glass-edge-hi:rgba(255,255,255,.30);
+  --glass-sheen:  linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%);
+  --glass-shadow: 0 10px 30px -8px rgba(0,0,0,.55),0 2px 6px -2px rgba(0,0,0,.35);
+  /* The selected-tab lens. */
+  --glass-lens:   rgba(255,255,255,.10);
+  /* Opaque twins (Reduce Transparency, no backdrop-filter). */
+  --glass-solid:  #1f1f22;
+
+  /* Geometry for floating things. */
+  --float-gap:10px;
+  --tabbar-r:32px;
+  /* Where the floating tab bar stands: on the home indicator's inset, less what it overlaps. */
+  --tabbar-bottom:max(calc(var(--sab) - 12px),10px);
+
+  /* The page ground: the plain colour plus two faint glows, so glass has something to bend.
+     Kept far below text contrast: a glow never sits behind words at more than a few percent. */
+  --ambient-a:color-mix(in srgb,var(--acc) 9%,transparent);
+  --ambient-b:color-mix(in srgb,var(--indigo) 11%,transparent);
+}
+:root[data-theme="light"]{
+  --glass-thin:   rgba(255,255,255,.52);
+  --glass:        rgba(250,250,252,.68);
+  --glass-thick:  rgba(248,248,250,.84);
+  --glass-edge:   rgba(255,255,255,.70);
+  --glass-edge-hi:rgba(255,255,255,.95);
+  --glass-sheen:  linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 62%);
+  --glass-shadow: 0 10px 30px -10px rgba(30,30,60,.22),0 2px 6px -2px rgba(30,30,60,.10),inset 0 0 0 .5px rgba(60,60,67,.10);
+  --glass-lens:   rgba(60,60,67,.08);
+  --glass-solid:  #f9f9fb;
+  --ambient-a:color-mix(in srgb,var(--acc) 12%,transparent);
+  --ambient-b:color-mix(in srgb,var(--blue) 9%,transparent);
+}
+
+/* -------------------------------------------------------------- ambient -- */
+/* Fixed behind everything, painted once: it does not move or recompose on scroll. */
+body::before{
+  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(120% 60% at 0% 0%,var(--ambient-a),transparent 60%),
+    radial-gradient(110% 55% at 100% 100%,var(--ambient-b),transparent 62%);
+}
+/* body paints var(--bg) itself; the glows have to sit over it, so the page colour moves to html. */
+body{background:transparent}
+
+/* -------------------------------------------------------- glass helper -- */
+/* For any element that should float as glass: .glass (regular) or .glass.thick. */
+.glass{
+  background:var(--glass-sheen),var(--glass);
+  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
+  box-shadow:inset 0 .5px 0 var(--glass-edge-hi),inset 0 0 0 .5px var(--glass-edge),var(--glass-shadow);
+}
+.glass.thick{background:var(--glass-sheen),var(--glass-thick)}
+
+/* ------------------------------------------------------------- tab bar -- */
+/* A floating capsule over the page, inset from the edges, the Start disc sitting inside it. */
+#tabbar{
+  inset-inline-start:var(--float-gap);inset-inline-end:var(--float-gap);
+  bottom:var(--tabbar-bottom);
+  max-width:520px;margin:0 auto;
+  align-items:center;
+  padding:6px;
+  border-top:0;border-radius:var(--tabbar-r);
+  background:var(--glass-sheen),var(--glass);
+  -webkit-backdrop-filter:var(--glass-blur-lg);backdrop-filter:var(--glass-blur-lg);
+  box-shadow:inset 0 .5px 0 var(--glass-edge-hi),inset 0 0 0 .5px var(--glass-edge),var(--glass-shadow);
+}
+:root[data-theme="light"] #tabbar{background:var(--glass-sheen),var(--glass)}
+#tabbar button{
+  position:relative;padding:6px 0 5px;border-radius:26px;min-height:52px;justify-content:center;
+  transition:color var(--fast),background-color var(--med) var(--ease);
+}
+/* The selected tab sits under a lens. */
+#tabbar button.on:not(.start){background:var(--glass-lens)}
+#tabbar button:not(.start):active{background:var(--glass-lens)}
+#tabbar button .icn{font-size:1.4375rem}
+/* Start: inside the capsule, not lifted out of it. */
+#tabbar button.start{margin-top:0;flex:0 0 auto;padding-inline:6px;gap:0}
+#tabbar button.start > span:not(.cir){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#tabbar button.start .tab-time{position:static;width:auto;height:auto;clip:auto;font-size:var(--fs-caption2)}
+#tabbar button.start .cir{
+  width:52px;height:52px;
+  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,#fff 28%,var(--acc)) 0%,var(--acc) 55%,color-mix(in srgb,#000 12%,var(--acc)) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -6px color-mix(in srgb,var(--acc) 70%,transparent);
+}
+#tabbar button.start.rec .cir{
+  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,#fff 28%,var(--orange)) 0%,var(--orange) 55%,color-mix(in srgb,#000 12%,var(--orange)) 100%);
+}
+/* A running workout shows its clock under the disc: the bar grows by that line. */
+#tabbar button.start.rec{gap:2px}
+
+/* Desktop keeps the same capsule, centred. */
+@media (min-width:1000px){
+  #tabbar{left:50%;right:auto;inset-inline-start:auto;inset-inline-end:auto;transform:translateX(-50%);width:520px;bottom:16px;border:0;border-radius:var(--tabbar-r);padding:6px}
+  #tabbar button.start{margin-top:0}
+}
+
+/* Safari before 16.2 (the iOS app goes back to 15.5) has no color-mix(): plain stand-ins. */
+@supports not (color: color-mix(in srgb, red 50%, blue)){
+  :root{--ambient-a:rgba(132,204,22,.09);--ambient-b:rgba(94,92,230,.11)}
+  :root[data-theme="light"]{--ambient-a:rgba(132,204,22,.12);--ambient-b:rgba(0,122,255,.09)}
+  #tabbar button.start .cir{background:var(--acc);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -6px rgba(0,0,0,.5)}
+  #tabbar button.start.rec .cir{background:var(--orange)}
+}
+
+/* ------------------------------------------------ opaque fallbacks -- */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .glass,#tabbar{background:var(--glass-solid)}
+}
+@media (prefers-reduced-transparency: reduce){
+  .glass,#tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--glass-solid)}
+  :root[data-theme="light"] #tabbar{background:var(--glass-solid)}
+  body::before{display:none}
+  body{background:var(--bg)}
+}
+@media (prefers-contrast: more){
+  #tabbar{background:var(--glass-solid);box-shadow:inset 0 0 0 1px var(--sep),var(--glass-shadow)}
+  body::before{display:none}
+}

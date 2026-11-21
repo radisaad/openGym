@@ -62,3 +62,4 @@ backups/
 
 # The RadiGym Tailscale node sign-in (docker-compose.tailscale.yml)
 tailscale-state/
+.qa/

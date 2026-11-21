@@ -11,6 +11,8 @@ import { registerDailyFormSource } from './lib/daily-form.js'
 import './admin.css'
 import './coach.css'
 import './index.css'
+// RadiGym's Liquid Glass layer: after index.css, so it is the last word on what floats.
+import './glass.css'
 import { hideBoot, handOverFromLaunchScreen } from './lib/boot.js'
 import { guardFocusZoom } from './lib/viewport-zoom.js'
 import { initBuildCaps } from './lib/channel.js'
