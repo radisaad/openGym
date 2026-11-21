@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { effectiveRoutineIds, effectiveRoutines } from '../lib/history.js'
@@ -39,6 +39,20 @@ export default function TabBar({ onStart, onPick }) {
   const trouble = useConnectionTrouble()
   // Before the early return below: a hook must run on every render.
   const run = useRunTimer(st => st.run)
+  // Scrolling down the page, the bar steps back to its icons; scrolling up, or near the top, it
+  // shows its labels again (glass.css #tabbar.min).
+  const [small, setSmall] = useState(false)
+  useEffect(() => {
+    let last = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      if (y < 60) setSmall(false)
+      else if (Math.abs(y - last) > 12) setSmall(y > last)
+      if (Math.abs(y - last) > 12 || y < 60) last = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
   if (!user && !isGuest) return null
   const cur = loc.pathname.split('/')[1] || 'home'
   // A screen without a tab of its own lights the tab it is opened from (Muscles from both).
@@ -93,7 +107,7 @@ export default function TabBar({ onStart, onPick }) {
   const holdEnd = () => { if (hold.current !== 'fired') { clearTimeout(hold.current); hold.current = null } }
 
   return (
-    <nav id="tabbar">
+    <nav id="tabbar" className={small ? 'min' : undefined}>
       <Tab active={on('home')} icon="house" label={t('Today')} dot={trouble} onClick={() => switchTab('/home')} tour="tab-home" />
       <Tab active={on('activities')} icon="list" label={t('Activities')} onClick={() => switchTab('/activities')} tour="tab-activities" />
       {/* On the workout screen itself there is nothing to resume, so the button reads as the

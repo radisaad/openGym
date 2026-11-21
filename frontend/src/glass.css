@@ -1,144 +1,310 @@
 /* ============================================================================
-   RadiGym: Liquid Glass layer
+   RadiGym: Liquid Glass (round 2)
    ----------------------------------------------------------------------------
-   Loaded after index.css (main.jsx). It does not replace the design system there: it adds
-   glass materials and applies them to the things that float over the page (the tab bar, the
-   rest timer, toasts, sheets, menus, the round header buttons), while the content itself
-   (cards, lists, stats, charts) stays on solid surfaces, where numbers read best mid-set.
+   Loaded after index.css and the screens' own sheets (main.jsx). index.css keeps the type scale,
+   the colours and every layout; this file changes the look:
 
-   Rules:
-   1. Glass is for controls that float, never for content.
-   2. Every glass surface has an opaque twin: Reduce Transparency, and browsers without
-      backdrop-filter, get it (bottom of this file).
-   3. Text on glass sits on a tint dense enough to read whatever scrolls behind it.
-   4. One highlight per surface: a thin light edge on top, a soft shadow under.
+   - The page is not black: deep colour glows sit behind everything, the accent at the top and a
+     cool violet below, so the glass and the cards have something to show.
+   - Controls are glass, floating above the content: round glass buttons, grouped toolbar buttons
+     in one capsule, a capsule tab bar with a droplet under the chosen tab and Start as its own
+     glass disc beside it, segmented controls as glass capsules, sheets that float inset with
+     corners that follow the phone's.
+   - Content sits on tinted, slightly see-through cards with a light edge: the glow shows through
+     a little, the numbers stay on a dense ground. Figures are heavy and rounded.
+
+   Every see-through surface has an opaque twin (Reduce Transparency, Increase Contrast, no
+   backdrop-filter): bottom of this file. No color-mix() here, so iOS 15 gets the same look.
    ========================================================================== */
 
 /* ---------------------------------------------------------------- tokens -- */
 :root{
-  /* Materials, by thickness. A thicker one hides more of what is behind it. */
-  --glass-thin:   rgba(44,44,48,.46);
-  --glass:        rgba(36,36,40,.62);
-  --glass-thick:  rgba(28,28,32,.78);
-  --glass-blur:   saturate(185%) blur(22px);
-  --glass-blur-lg:saturate(190%) blur(34px);
-  /* The light edge: brighter on top, fading down the sides. */
-  --glass-edge:   rgba(255,255,255,.14);
-  --glass-edge-hi:rgba(255,255,255,.30);
-  --glass-sheen:  linear-gradient(180deg,rgba(255,255,255,.10) 0%,rgba(255,255,255,.02) 38%,rgba(255,255,255,0) 60%);
-  --glass-shadow: 0 10px 30px -8px rgba(0,0,0,.55),0 2px 6px -2px rgba(0,0,0,.35);
-  /* The selected-tab lens. */
-  --glass-lens:   rgba(255,255,255,.10);
-  /* Opaque twins (Reduce Transparency, no backdrop-filter). */
-  --glass-solid:  #1f1f22;
-
-  /* Geometry for floating things. */
-  --float-gap:10px;
-  --tabbar-r:32px;
-  /* Where the floating tab bar stands: on the home indicator's inset, less what it overlaps. */
-  --tabbar-bottom:max(calc(var(--sab) - 12px),10px);
-
-  /* The page ground: the plain colour plus two faint glows, so glass has something to bend.
-     Kept far below text contrast: a glow never sits behind words at more than a few percent. */
-  --ambient-a:color-mix(in srgb,var(--acc) 9%,transparent);
-  --ambient-b:color-mix(in srgb,var(--indigo) 11%,transparent);
+  --lg-bg:#06060a;
+  /* Glass, by thickness. */
+  --lg-thin:rgba(120,120,135,.16);
+  --lg:rgba(40,40,48,.52);
+  --lg-thick:rgba(26,26,32,.80);
+  --lg-blur:saturate(190%) blur(24px);
+  --lg-blur-lg:saturate(200%) blur(40px);
+  --lg-rim:rgba(255,255,255,.16);
+  --lg-rim-hi:rgba(255,255,255,.42);
+  --lg-sheen:linear-gradient(180deg,rgba(255,255,255,.14) 0%,rgba(255,255,255,.03) 45%,rgba(255,255,255,0) 70%);
+  --lg-shadow:0 16px 40px -14px rgba(0,0,0,.7),0 2px 8px -2px rgba(0,0,0,.4);
+  --lg-drop:rgba(255,255,255,.14);
+  --lg-solid:#202026;
+  /* Content cards: tinted, a little see-through, no blur (they scroll; blur there costs frames). */
+  --lg-card:rgba(30,30,38,.66);
+  --lg-card-2:rgba(255,255,255,.06);
+  --lg-card-rim:rgba(255,255,255,.07);
+  --lg-card-solid:#1a1a20;
+  /* The page glows. */
+  --lg-glow-1:.30;
+  --lg-glow-2:rgba(104,84,255,.26);
+  --lg-glow-3:rgba(0,170,255,.12);
+  --lg-r-card:26px;
+  --lg-r-row:22px;
+  --lg-round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  /* The floating tab bar: on the home indicator's inset, less what it may overlap. */
+  --lg-tb-bottom:max(calc(var(--sab) - 10px),12px);
 }
 :root[data-theme="light"]{
-  --glass-thin:   rgba(255,255,255,.52);
-  --glass:        rgba(250,250,252,.68);
-  --glass-thick:  rgba(248,248,250,.84);
-  --glass-edge:   rgba(255,255,255,.70);
-  --glass-edge-hi:rgba(255,255,255,.95);
-  --glass-sheen:  linear-gradient(180deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,.12) 40%,rgba(255,255,255,0) 62%);
-  --glass-shadow: 0 10px 30px -10px rgba(30,30,60,.22),0 2px 6px -2px rgba(30,30,60,.10),inset 0 0 0 .5px rgba(60,60,67,.10);
-  --glass-lens:   rgba(60,60,67,.08);
-  --glass-solid:  #f9f9fb;
-  --ambient-a:color-mix(in srgb,var(--acc) 12%,transparent);
-  --ambient-b:color-mix(in srgb,var(--blue) 9%,transparent);
+  --lg-bg:#eef0f6;
+  --lg-thin:rgba(255,255,255,.50);
+  --lg:rgba(255,255,255,.58);
+  --lg-thick:rgba(250,250,253,.86);
+  --lg-rim:rgba(255,255,255,.75);
+  --lg-rim-hi:rgba(255,255,255,1);
+  --lg-sheen:linear-gradient(180deg,rgba(255,255,255,.65) 0%,rgba(255,255,255,.15) 45%,rgba(255,255,255,0) 70%);
+  --lg-shadow:0 16px 40px -16px rgba(40,40,90,.28),0 2px 8px -3px rgba(40,40,90,.12),inset 0 0 0 .5px rgba(60,60,90,.10);
+  --lg-drop:rgba(0,0,30,.07);
+  --lg-solid:#f9f9fc;
+  --lg-card:rgba(255,255,255,.80);
+  --lg-card-2:rgba(118,118,140,.10);
+  --lg-card-rim:rgba(255,255,255,.9);
+  --lg-card-solid:#ffffff;
+  --lg-glow-1:.22;
+  --lg-glow-2:rgba(120,100,255,.18);
+  --lg-glow-3:rgba(0,170,255,.14);
 }
 
-/* -------------------------------------------------------------- ambient -- */
-/* Fixed behind everything, painted once: it does not move or recompose on scroll. */
-body::before{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
-  background:
-    radial-gradient(120% 60% at 0% 0%,var(--ambient-a),transparent 60%),
-    radial-gradient(110% 55% at 100% 100%,var(--ambient-b),transparent 62%);
-}
-/* body paints var(--bg) itself; the glows have to sit over it, so the page colour moves to html. */
+/* -------------------------------------------------------------- the page -- */
+html{background:var(--lg-bg)}
 body{background:transparent}
-
-/* -------------------------------------------------------- glass helper -- */
-/* For any element that should float as glass: .glass (regular) or .glass.thick. */
-.glass{
-  background:var(--glass-sheen),var(--glass);
-  -webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);
-  box-shadow:inset 0 .5px 0 var(--glass-edge-hi),inset 0 0 0 .5px var(--glass-edge),var(--glass-shadow);
+/* Two fixed layers, painted once: the cool glows, and the accent glow over the top of the page. */
+body::before,body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none}
+body::before{
+  background:
+    radial-gradient(90% 55% at 100% 70%,var(--lg-glow-2),transparent 70%),
+    radial-gradient(70% 45% at 0% 100%,var(--lg-glow-3),transparent 70%);
 }
-.glass.thick{background:var(--glass-sheen),var(--glass-thick)}
+body::after{
+  background:radial-gradient(120% 52% at 20% -8%,var(--acc),transparent 62%);
+  opacity:var(--lg-glow-1);
+}
+/* Today wears the colour of its run. */
+:root body:has(.ra-hero) ::selection{background:var(--acc)}
+:root body:has(.ra-hero:not(.walk):not(.rest):not(.done))::after{background:radial-gradient(120% 55% at 30% -10%,#ff5a1f,transparent 62%)}
+:root body:has(.ra-hero.walk)::after{background:radial-gradient(120% 55% at 30% -10%,#2f7bff,transparent 62%)}
 
-/* ------------------------------------------------------------- tab bar -- */
-/* A floating capsule over the page, inset from the edges, the Start disc sitting inside it. */
+/* -------------------------------------------------------- page titles -- */
+.hdr h1,:root .ra-title{font-weight:800;letter-spacing:-.035em}
+.hdr{margin-bottom:20px}
+/* Figures: heavy and rounded, as on the watch. */
+.card .big,.ra-big .v,.ra-ring-v,.ra-stat-v,.ra-act-stats .v,.ra-race .v,.ra-goal-n,
+.tile .v,.tiles .v,#timer .t,.cardio-num,.stat-v,.streak-n{
+  font-family:var(--lg-round);font-weight:700;letter-spacing:-.02em;
+}
+
+/* ------------------------------------------------- glass round buttons -- */
+.iconbtn{
+  width:40px;height:40px;
+  background:var(--lg-sheen),var(--lg);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),0 6px 18px -8px rgba(0,0,0,.55);
+}
+:root .ra-avatar{
+  width:40px;height:40px;
+  background:var(--lg-sheen),var(--lg);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),0 6px 18px -8px rgba(0,0,0,.55);
+}
+/* Two or more buttons side by side in a header share one capsule, as a toolbar does. */
+.hdr-actions:has(> .iconbtn + .iconbtn){
+  gap:0;padding:2px;border-radius:999px;
+  background:var(--lg-sheen),var(--lg);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),0 6px 18px -8px rgba(0,0,0,.55);
+}
+.hdr-actions:has(> .iconbtn + .iconbtn) > .iconbtn{background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* ----------------------------------------------------------- content -- */
+.card,:root .ra-card{
+  background:linear-gradient(180deg,var(--lg-card-2),rgba(0,0,0,0) 40%),var(--lg-card);
+  border-radius:var(--lg-r-card);
+  box-shadow:inset 0 .5px 0 var(--lg-card-rim),inset 0 0 0 .5px var(--lg-card-rim);
+  padding:18px;
+}
+:root[data-theme="light"] .card,:root[data-theme="light"] .ra-card{box-shadow:0 10px 30px -18px rgba(40,40,90,.25),inset 0 0 0 .5px rgba(60,60,90,.06)}
+.item{
+  background:linear-gradient(180deg,var(--lg-card-2),rgba(0,0,0,0) 50%),var(--lg-card);
+  border-radius:var(--lg-r-row);
+  box-shadow:inset 0 .5px 0 var(--lg-card-rim),inset 0 0 0 .5px var(--lg-card-rim);
+}
+:root[data-theme="light"] .item{box-shadow:0 8px 24px -18px rgba(40,40,90,.25),inset 0 0 0 .5px rgba(60,60,90,.06)}
+.list{gap:10px}
+/* Grouped rows (Settings): the group is the card. */
+.group,.lgroup,.settings-group{border-radius:var(--lg-r-card)}
+/* Tiles inside a card: a step brighter, no border. */
+:root .ra-stat,:root .ra-race,:root .ra-day,.tile{background:var(--lg-card-2);border-radius:18px}
+:root .ra-day{border-radius:16px}
+:root .ra-day.today{outline:0;box-shadow:inset 0 0 0 1.5px var(--acc)}
+/* Today's run: the hero keeps its colour and gains depth and a light edge. */
+:root .ra-hero{
+  border-radius:30px;padding:22px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 .5px rgba(255,255,255,.18),0 24px 50px -22px rgba(255,80,30,.65);
+}
+:root .ra-hero.walk{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 .5px rgba(255,255,255,.18),0 24px 50px -22px rgba(47,123,255,.65)}
+:root .ra-hero::after{background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.28),rgba(255,255,255,.04) 60%,transparent 70%)}
+:root .ra-hero-title{font-size:30px;font-weight:800;letter-spacing:-.03em}
+/* The hero's button is a glass capsule of white light. */
+:root .ra-hero-btn{
+  border-radius:999px;padding:15px 22px;
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,.86));
+  box-shadow:inset 0 1px 0 #fff,0 10px 24px -12px rgba(0,0,0,.45);
+}
+:root .ra-hero-row .ra-hero-btn.ghost{background:rgba(255,255,255,.18);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 .5px 0 rgba(255,255,255,.5),inset 0 0 0 .5px rgba(255,255,255,.25)}
+
+/* ------------------------------------------------------------ buttons -- */
+.btn{border-radius:999px}
+.btn.primary{
+  background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 55%),var(--acc);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 24px -14px var(--acc);
+}
+.btn:not(.primary):not(.ghost):not(.plain):not(.tinted):not(.danger){
+  background:var(--lg-sheen),var(--lg-thin);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim);
+}
+.btn.sm,.btn.xs{border-radius:999px}
+:root .ra-ask button,:root .ra-scale button,.chip{border-radius:999px}
+:root .ra-scale button{border-radius:16px}
+
+/* ------------------------------------------------- segmented controls -- */
+.seg,:root:not([data-theme="light"]) .seg,:root[data-theme="light"] .seg{
+  border-radius:999px;padding:3px;
+  background:var(--lg-sheen),var(--lg-thin);
+  -webkit-backdrop-filter:var(--lg-blur);backdrop-filter:var(--lg-blur);
+  box-shadow:inset 0 .5px 0 var(--lg-rim),inset 0 0 0 .5px var(--lg-rim);
+}
+.seg-sel,:root:not([data-theme="light"]) .seg-sel,:root[data-theme="light"] .seg-sel{
+  top:3px;bottom:3px;inset-inline-start:3px;width:calc((100% - 6px)/var(--n));
+  border-radius:999px;
+  background:linear-gradient(180deg,rgba(255,255,255,.30),rgba(255,255,255,.10));
+  box-shadow:inset 0 .5px 0 rgba(255,255,255,.6),inset 0 0 0 .5px rgba(255,255,255,.22),0 4px 12px -4px rgba(0,0,0,.45);
+}
+:root[data-theme="light"] .seg-sel{background:#fff;box-shadow:0 4px 12px -4px rgba(40,40,90,.28),inset 0 0 0 .5px rgba(60,60,90,.08)}
+.seg button{min-height:34px}
+
+/* ----------------------------------------------------------- tab bar -- */
+/* A glass capsule for the four tabs, and Start as its own disc beside it. The capsule is the
+   bar's ::before, a grid item spanning the tab columns, so the markup stays as it is. */
 #tabbar{
-  inset-inline-start:var(--float-gap);inset-inline-end:var(--float-gap);
-  bottom:var(--tabbar-bottom);
+  inset-inline-start:14px;inset-inline-end:14px;bottom:var(--lg-tb-bottom);
   max-width:520px;margin:0 auto;
-  align-items:center;
-  padding:6px;
-  border-top:0;border-radius:var(--tabbar-r);
-  background:var(--glass-sheen),var(--glass);
-  -webkit-backdrop-filter:var(--glass-blur-lg);backdrop-filter:var(--glass-blur-lg);
-  box-shadow:inset 0 .5px 0 var(--glass-edge-hi),inset 0 0 0 .5px var(--glass-edge),var(--glass-shadow);
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) 66px;align-items:center;column-gap:0;
+  padding:0;border:0;background:none;box-shadow:none;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  transition:transform var(--med) var(--ease);
 }
-:root[data-theme="light"] #tabbar{background:var(--glass-sheen),var(--glass)}
-#tabbar button{
-  position:relative;padding:6px 0 5px;border-radius:26px;min-height:52px;justify-content:center;
-  transition:color var(--fast),background-color var(--med) var(--ease);
+:root[data-theme="light"] #tabbar{background:none}
+#tabbar::before{
+  content:"";grid-column:1 / 5;grid-row:1;align-self:stretch;
+  border-radius:999px;margin-inline-end:10px;
+  background:var(--lg-sheen),var(--lg);
+  -webkit-backdrop-filter:var(--lg-blur-lg);backdrop-filter:var(--lg-blur-lg);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),var(--lg-shadow);
 }
-/* The selected tab sits under a lens. */
-#tabbar button.on:not(.start){background:var(--glass-lens)}
-#tabbar button:not(.start):active{background:var(--glass-lens)}
+#tabbar > button{grid-row:1;position:relative;z-index:1;min-height:58px;padding:7px 0 6px;margin:4px 0;justify-content:center;gap:2px;border-radius:999px;transition:color var(--fast),background-color var(--med) var(--ease)}
+#tabbar > button:nth-of-type(1){grid-column:1;margin-inline-start:4px}
+#tabbar > button:nth-of-type(2){grid-column:2}
+#tabbar > button:nth-of-type(4){grid-column:3}
+#tabbar > button:nth-of-type(5){grid-column:4;margin-inline-end:14px}
+#tabbar > button.start{grid-column:5}
+/* The droplet under the chosen tab. */
+#tabbar > button.on:not(.start){background:var(--lg-drop);box-shadow:inset 0 .5px 0 rgba(255,255,255,.18)}
+#tabbar > button:not(.start):active{background:var(--lg-drop)}
 #tabbar button .icn{font-size:1.4375rem}
-/* Start: inside the capsule, not lifted out of it. */
-#tabbar button.start{margin-top:0;flex:0 0 auto;padding-inline:6px;gap:0}
+#tabbar > button > span:last-child{font-size:.625rem;font-weight:600;letter-spacing:.01em}
+/* Start: a glass disc lit with the accent. The word stays for screen readers. */
+#tabbar button.start{margin:0;padding:0;min-height:0;gap:0;justify-self:end}
 #tabbar button.start > span:not(.cir){position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-#tabbar button.start .tab-time{position:static;width:auto;height:auto;clip:auto;font-size:var(--fs-caption2)}
 #tabbar button.start .cir{
-  width:52px;height:52px;
-  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,#fff 28%,var(--acc)) 0%,var(--acc) 55%,color-mix(in srgb,#000 12%,var(--acc)) 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -6px color-mix(in srgb,var(--acc) 70%,transparent);
+  width:62px;height:62px;
+  background:radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,.55),rgba(255,255,255,0) 46%),var(--acc);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 0 0 .5px rgba(255,255,255,.35),0 14px 30px -12px var(--acc),0 4px 10px -4px rgba(0,0,0,.5);
 }
-#tabbar button.start.rec .cir{
-  background:radial-gradient(120% 120% at 30% 20%,color-mix(in srgb,#fff 28%,var(--orange)) 0%,var(--orange) 55%,color-mix(in srgb,#000 12%,var(--orange)) 100%);
-}
-/* A running workout shows its clock under the disc: the bar grows by that line. */
-#tabbar button.start.rec{gap:2px}
-
-/* Desktop keeps the same capsule, centred. */
+#tabbar button.start .cir .icn{font-size:1.75rem}
+#tabbar button.start.rec .cir{background:radial-gradient(120% 120% at 30% 18%,rgba(255,255,255,.55),rgba(255,255,255,0) 46%),var(--orange)}
+/* A workout running elsewhere: its clock rides on the disc's edge. */
+#tabbar button.start .tab-time{position:absolute;width:auto;height:auto;clip:auto;overflow:visible;bottom:-4px;left:50%;transform:translateX(-50%);
+  font-size:.625rem;font-weight:700;padding:1px 6px;border-radius:99px;background:var(--lg-thick);color:var(--label)}
+/* Scrolling down: the bar steps back to its icons (TabBar.jsx sets .min). */
+#tabbar.min > button:not(.start){min-height:46px;padding:4px 0}
+#tabbar.min > button:not(.start) > span:last-child{display:none}
+#tabbar.min button.start .cir{width:52px;height:52px}
 @media (min-width:1000px){
-  #tabbar{left:50%;right:auto;inset-inline-start:auto;inset-inline-end:auto;transform:translateX(-50%);width:520px;bottom:16px;border:0;border-radius:var(--tabbar-r);padding:6px}
+  #tabbar{left:50%;right:auto;inset-inline-start:auto;inset-inline-end:auto;transform:translateX(-50%);width:520px;bottom:18px;border:0;border-radius:0;box-shadow:none}
   #tabbar button.start{margin-top:0}
 }
 
-/* Safari before 16.2 (the iOS app goes back to 15.5) has no color-mix(): plain stand-ins. */
-@supports not (color: color-mix(in srgb, red 50%, blue)){
-  :root{--ambient-a:rgba(132,204,22,.09);--ambient-b:rgba(94,92,230,.11)}
-  :root[data-theme="light"]{--ambient-a:rgba(132,204,22,.12);--ambient-b:rgba(0,122,255,.09)}
-  #tabbar button.start .cir{background:var(--acc);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px -6px rgba(0,0,0,.5)}
-  #tabbar button.start.rec .cir{background:var(--orange)}
+/* -------------------------------------------- floating, over the page -- */
+#toast{
+  background:var(--lg-sheen),var(--lg-thick);
+  -webkit-backdrop-filter:var(--lg-blur-lg);backdrop-filter:var(--lg-blur-lg);
+  border-radius:999px;
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),var(--lg-shadow);
+}
+#timer{
+  border-radius:30px;
+  background:var(--lg-sheen),var(--lg-thick);
+  -webkit-backdrop-filter:var(--lg-blur-lg);backdrop-filter:var(--lg-blur-lg);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),var(--lg-shadow);
+}
+#timer:not(.working) .bar{inset-inline:22px;top:0;border-radius:2px}
+body.no-tabbar #timer{inset-inline-start:10px;inset-inline-end:10px;bottom:max(var(--sab),10px);border-radius:30px;padding:14px}
+#timer .acts .btn{border-radius:999px}
+/* The rest bar sits above the floating tab bar. */
+#timer{bottom:calc(var(--lg-tb-bottom) + 72px)}
+
+/* Pinned headers: the page ground, frosted, without a hard edge. */
+.whdr.stick,.stats-index,.conn-bar{
+  background:linear-gradient(180deg,rgba(6,6,10,.86),rgba(6,6,10,.62));
+}
+:root[data-theme="light"] .whdr.stick,:root[data-theme="light"] .stats-index,:root[data-theme="light"] .conn-bar{background:linear-gradient(180deg,rgba(238,240,246,.9),rgba(238,240,246,.66))}
+
+/* --------------------------------------------------------- sheets -- */
+/* They float inset, every corner rounded like the phone's. */
+.mback{background:rgba(0,0,0,.32);-webkit-backdrop-filter:blur(3px) saturate(120%);backdrop-filter:blur(3px) saturate(120%)}
+.sheet{
+  inset-inline-start:8px;inset-inline-end:8px;bottom:max(var(--sab),8px);
+  border-radius:38px;
+  padding-bottom:20px;
+  background:var(--lg-sheen),var(--lg-thick);
+  -webkit-backdrop-filter:var(--lg-blur-lg);backdrop-filter:var(--lg-blur-lg);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),0 30px 70px -20px rgba(0,0,0,.75);
+}
+:root[data-theme="light"] .sheet{background:var(--lg-sheen),var(--lg-thick)}
+.sheet .grab{width:40px;background:var(--label-3)}
+.sheet h3{font-size:1.375rem;font-weight:700;letter-spacing:-.025em}
+/* Rows inside a sheet: on the glass, a step brighter. */
+.sheet .item,.sheet .card{background:var(--lg-card-2);box-shadow:none}
+@media (min-width:1000px){.sheet{bottom:16px;border-radius:38px}}
+
+/* Dialogs centred on the screen. */
+.center{
+  border-radius:34px;
+  background:var(--lg-sheen),var(--lg-thick);
+  -webkit-backdrop-filter:var(--lg-blur-lg);backdrop-filter:var(--lg-blur-lg);
+  box-shadow:inset 0 .5px 0 var(--lg-rim-hi),inset 0 0 0 .5px var(--lg-rim),0 30px 70px -20px rgba(0,0,0,.75);
 }
 
-/* ------------------------------------------------ opaque fallbacks -- */
+/* ------------------------------------------------ opaque twins -- */
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-  .glass,#tabbar{background:var(--glass-solid)}
+#tabbar::before,.iconbtn,:root .ra-avatar,.hdr-actions:has(> .iconbtn + .iconbtn),.seg,#toast,#timer,.sheet,.center{background:var(--lg-solid)}
+.card,:root .ra-card,.item{background:var(--lg-card-solid)}
 }
 @media (prefers-reduced-transparency: reduce){
-  .glass,#tabbar{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--glass-solid)}
-  :root[data-theme="light"] #tabbar{background:var(--glass-solid)}
-  body::before{display:none}
-  body{background:var(--bg)}
+#tabbar::before,.iconbtn,:root .ra-avatar,.hdr-actions:has(> .iconbtn + .iconbtn),.seg,#toast,#timer,.sheet,.center,:root .ra-hero-row .ra-hero-btn.ghost{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--lg-solid)}
+  :root:not([data-theme="light"]) .seg,:root[data-theme="light"] .seg,:root[data-theme="light"] .sheet{background:var(--lg-solid)}
+.card,:root .ra-card,.item{background:var(--lg-card-solid)}
+  .whdr.stick,.stats-index,.conn-bar{background:var(--bg)}
+  body::before,body::after{display:none}
+  html{background:var(--bg)}
 }
 @media (prefers-contrast: more){
-  #tabbar{background:var(--glass-solid);box-shadow:inset 0 0 0 1px var(--sep),var(--glass-shadow)}
-  body::before{display:none}
+  #tabbar::before,.sheet,.center,#timer,#toast{background:var(--lg-solid);box-shadow:inset 0 0 0 1px var(--sep),var(--lg-shadow)}
+.card,:root .ra-card,.item{background:var(--lg-card-solid);box-shadow:inset 0 0 0 1px var(--sep)}
+  body::before,body::after{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  #tabbar,#tabbar > button{transition:none}
 }
