@@ -41,6 +41,22 @@ describe('createRoutine', () => {
     expect(createRoutine(base(), { name: 'C', exercises: [{ exercise: 'treadmill', reps: 10 }] }).problems[0].problem).toMatch(/minutes/)
     expect(createRoutine(base(), { name: 'C', exercises: [{ exercise: 'treadmill' }] }).routine.ex[0]).toMatchObject({ id: '3666', min: 20 })
   })
+  test('cardio blocks take their length and speed: 4 × 5 min at 10 km/h, 2 min rest', () => {
+    const r = createRoutine(base(), { name: 'Intervals', exercises: [{ exercise: 'treadmill', sets: 4, minutes: 5, speed_kmh: 10, rest_sec: 120 }] })
+    expect(r.problems).toBeUndefined()
+    expect(r.routine.ex[0]).toMatchObject({ id: '3666', sets: 4, min: 5, speed: 10, restSec: 120 })
+  })
+  test('cardio minutes and speed are checked, and refused on a lift', () => {
+    expect(createRoutine(base(), { name: 'C', exercises: [{ exercise: 'treadmill', minutes: 0 }] }).problems[0].field).toBe('exercises[0].minutes')
+    expect(createRoutine(base(), { name: 'C', exercises: [{ exercise: 'treadmill', speed_kmh: 99 }] }).problems[0].field).toBe('exercises[0].speed_kmh')
+    expect(createRoutine(base(), { name: 'C', exercises: [{ exercise: '0025', minutes: 5 }] }).problems[0].problem).toMatch(/cardio/)
+  })
+  test('an edit changes a cardio slot\'s block length and keeps its speed', () => {
+    const S = base()
+    const made = createRoutine(S, { name: 'Run', exercises: [{ exercise: 'treadmill', sets: 4, minutes: 20, speed_kmh: 9 }] }).routine
+    const r = updateRoutine(S, made.id, { exercises: [{ exercise: '3666', minutes: 7 }] })
+    expect(r.routine.ex[0]).toMatchObject({ id: '3666', sets: 4, min: 7, speed: 9 })
+  })
 })
 
 describe('updateRoutine', () => {

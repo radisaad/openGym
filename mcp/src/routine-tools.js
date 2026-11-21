@@ -80,8 +80,10 @@ const exerciseSchema = z.object({
   sets: z.number().int().min(1).max(ROUTINE_LIMITS.maxSets).optional().describe('Number of sets. Omit for the profile\'s default (3 unless they set their own).'),
   reps: z.number().int().min(1).max(ROUTINE_LIMITS.maxReps).optional().describe('Reps per set, for a rep exercise.'),
   seconds: z.number().int().min(1).max(ROUTINE_LIMITS.maxSec).optional().describe('Seconds per set, for a hold (plank). Not with reps.'),
+  minutes: z.number().min(0.5).max(ROUTINE_LIMITS.maxMin).optional().describe('Cardio only (a run, treadmill, bike): minutes per block. "4 × 5 min" is sets 4, minutes 5. Omit for 20.'),
+  speed_kmh: z.number().min(0.5).max(ROUTINE_LIMITS.maxKmh).optional().describe('Cardio only: planned speed per block in km/h (convert mph × 1.609). Omit for the exercise\'s usual speed.'),
   weight: z.number().min(0).optional().describe('Planned load in `unit`; omit or 0 to start from what the user lifted last time.'),
-  rest_sec: z.number().int().min(0).max(ROUTINE_LIMITS.maxRestSec).optional().describe('Rest after each set, seconds. 0 or omitted: the global rest timer.'),
+  rest_sec: z.number().int().min(0).max(ROUTINE_LIMITS.maxRestSec).optional().describe('Rest after each set (for cardio: the recovery between blocks), seconds. 0 or omitted: the global rest timer.'),
   note: z.string().max(ROUTINE_LIMITS.maxNote).optional().describe('A note shown with this exercise in the workout.'),
 })
 const weekdaysSchema = z.array(z.enum(WEEKDAYS)).max(7)
@@ -89,7 +91,7 @@ const weekdaysSchema = z.array(z.enum(WEEKDAYS)).max(7)
 export const createRoutineTool = {
   name: 'create_routine',
   description: [
-    'Create a routine in the user\'s openGym plan (it syncs to all their devices), e.g. "squat 5 × 5 at 100 kg, plank 3 × 60 s, Tuesdays and Fridays".',
+    'Create a routine in the user\'s openGym plan (it syncs to all their devices), e.g. "squat 5 × 5 at 100 kg, plank 3 × 60 s, Tuesdays and Fridays", or a cardio session "treadmill 4 × 5 min at 10 km/h, 2 min between" (sets 4, minutes 5, speed_kmh 10, rest_sec 120).',
     'Exercises are matched against the library like log_workout: when a name matches several or none, nothing is saved and `problems` lists candidates to put to the user.',
     'Each exercise starts the way picking it in the app starts it; only what you pass is set on top. `weekdays` puts it on those days of the weekly plan, next to whatever is planned there already.',
     'Call with dry_run: true first when you interpreted anything, show the preview, and save once the user agrees.',

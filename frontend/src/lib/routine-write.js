@@ -15,7 +15,7 @@ import { deleteRoutine } from './routines.js'
 import { isCardio } from './exercises.js'
 
 const LB_TO_KG = 0.45359237
-export const ROUTINE_LIMITS = { maxExercises: 40, maxSets: 20, maxReps: 100, maxSec: 3600, maxRestSec: 900, maxKg: 2000, maxName: 80, maxNote: 280 }
+export const ROUTINE_LIMITS = { maxExercises: 40, maxSets: 20, maxReps: 100, maxSec: 3600, maxRestSec: 900, maxKg: 2000, maxMin: 600, maxKmh: 40, maxName: 80, maxNote: 280 }
 // JS getDay() order, the state's own (S.week is keyed 0 Sunday … 6 Saturday).
 export const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
@@ -46,7 +46,9 @@ function slotOf(S, ex, base, unit, at, problems) {
   }
   const timed = ex?.seconds != null
   if (timed && ex?.reps != null) { problems.push({ field: at, problem: 'give reps or seconds, not both' }); return null }
-  if (isCardio(hit.id) && (ex?.reps != null || timed)) { problems.push({ field: at, problem: 'a cardio exercise is planned in minutes in the app; leave reps and seconds out' }); return null }
+  const cardio = isCardio(hit.id)
+  if (cardio && (ex?.reps != null || timed)) { problems.push({ field: at, problem: 'a cardio exercise is planned in minutes in the app: give minutes (and speed_kmh), not reps or seconds' }); return null }
+  if (!cardio && (ex?.minutes != null || ex?.speed_kmh != null)) { problems.push({ field: at, problem: 'minutes and speed_kmh are for a cardio exercise (a run, a treadmill, a bike); this one takes reps or seconds' }); return null }
   const slot = base && base.id === hit.id ? { ...base } : { id: hit.id, ...pickedExerciseConfig(hit.id, timed ? 'time' : undefined, S) }
   if (timed && slot.mode !== 'time') { slot.mode = 'time'; delete slot.reps; delete slot.repsMin }
   if (ex?.reps != null && slot.mode === 'time') { slot.mode = 'reps'; delete slot.sec }
@@ -62,6 +64,12 @@ function slotOf(S, ex, base, unit, at, problems) {
   if (reps != null) { slot.reps = Math.round(reps); if (slot.repsMin >= slot.reps) delete slot.repsMin }
   const sec = check('seconds', ex?.seconds, 1, ROUTINE_LIMITS.maxSec)
   if (sec != null) slot.sec = Math.round(sec)
+  // A cardio block: how long each block lasts and how fast, in km/h (the state's own unit, whatever
+  // the profile shows). "4 × 5 min at 10 km/h" is sets 4, minutes 5, speed_kmh 10.
+  const min = check('minutes', ex?.minutes, 0.5, ROUTINE_LIMITS.maxMin)
+  if (min != null) slot.min = Math.round(min * 2) / 2
+  const kmh = check('speed_kmh', ex?.speed_kmh, 0.5, ROUTINE_LIMITS.maxKmh)
+  if (kmh != null) slot.speed = Math.round(kmh * 10) / 10
   const rest = check('rest_sec', ex?.rest_sec, 0, ROUTINE_LIMITS.maxRestSec)
   if (rest != null) { if (rest > 0) slot.restSec = Math.round(rest); else delete slot.restSec }
   if (ex?.weight != null) {
@@ -108,8 +116,8 @@ function placeOnWeekdays(S, id, days) {
 }
 
 /**
- * A new routine into `S` (mutated). `input`: { name, exercises: [{ exercise, sets?, reps? | seconds?,
- * weight?, rest_sec?, note? }], weekdays?, unit? }. → { routine } or { problems } (S untouched).
+ * A new routine into `S` (mutated). `input`: { name, exercises: [{ exercise, sets?, reps? | seconds? | minutes?,
+ * speed_kmh?, weight?, rest_sec?, note? }], weekdays?, unit? }. → { routine } or { problems } (S untouched).
  */
 export function createRoutine(S, input, { id } = {}) {
   const problems = []
